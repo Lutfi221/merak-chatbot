@@ -1,5 +1,5 @@
 {
-  "name": "merak-chat-bot",
+  "name": "merak-chatbot",
   "version": "1.0.0",
   "description": "Decision tree based chat bot",
   "main": "dist/index.js",
@@ -14,7 +14,8 @@
   },
   "keywords": [
     "chat",
-    "bot"
+    "bot",
+    "chatbot"
   ],
   "author": "Lutfi Azis Hafiizhudin <17lutfi21@gmail.com>",
   "license": "MIT",
