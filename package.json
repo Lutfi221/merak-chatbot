@@ -1,0 +1,29 @@
+{
+  "name": "merak-chat-bot",
+  "version": "1.0.0",
+  "description": "Decision tree based chat bot",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll",
+    "start": "ts-node ./src/index.ts",
+    "build": "tsc",
+    "prettier": "prettier --write .",
+    "watch": "nodemon"
+  },
+  "keywords": [
+    "chat",
+    "bot"
+  ],
+  "author": "Lutfi Azis Hafiizhudin <17lutfi21@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^15.14.9",
+    "jest": "^27.0.6",
+    "nodemon": "^2.0.12",
+    "prettier": "^2.3.2",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  }
+}
