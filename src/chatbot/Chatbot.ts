@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-import { Data, Link, Step } from "./index";
+import { Data, Link, Step, Value } from "./index";
 
 export type Head = {
   /**
@@ -177,7 +177,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         // TODO: fetch api
       }
 
-      this.emitOutput(step.content);
+      this.emitOutput();
 
       if (needsInput) {
         if (typeof step.value !== "undefined") {
@@ -210,8 +210,18 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
   /**
    * Update "head" to the next step in a page.
+   *
+   * If there is a "next" property in the current
+   * step, then it will update "head" to that
+   * location instead.
    */
   private next() {
+    const next = this.getCurrentStep().next;
+    if (next) {
+      this.navigate(next, 0);
+      return;
+    }
+
     /**
      * If the head is on the last step.
      */
@@ -247,10 +257,51 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (!prompt) return;
       message = prompt;
     }
+    message = this.substituteVariables(message);
     this.emit("output", message);
   }
 
+  /**
+   * Substitutes all the variables in the
+   * string.
+   */
+  private substituteVariables(message: string): string {
+    const pattern = /{{.+}}/g;
+    const out = message.replaceAll(pattern, (s) => {
+      /**
+       * Removes the "{{" and "}}"
+       */
+      const varPath = s.slice(2, -2);
+      return this.getVariableValue(varPath);
+    });
+    return out;
+  }
+
+  /**
+   * Gets the value from path.
+   *
+   * @param      varPath  Variable path
+   *
+   * @example
+   * this.getVariableValue("foo");
+   * this.getVariableValue("foo.bar");
+   * this.getVariableValue("foo.bar.2");
+   */
+  private getVariableValue(varPath: string): Value {
+    const varNames = varPath.split(".");
+    let head = this.storage;
+
+    for (let i = 0; i < varNames.length; ++i) {
+      const name = varNames[i];
+      if (typeof head[name] === "undefined") return "";
+      head = head[name];
+    }
+
+    return head;
+  }
+
   private stepNeedsInput(step: Step): boolean {
+    if (step.api) return false;
     return (
       typeof step.name !== "undefined" ||
       typeof step.links !== "undefined" ||

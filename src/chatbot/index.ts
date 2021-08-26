@@ -21,6 +21,10 @@ export type BaseStep = {
    * Links mapped to their user input key.
    */
   links?: { [key: string]: Link };
+  /**
+   * The next page to go to.
+   */
+  next?: Link;
 };
 
 export interface Step extends BaseStep {
@@ -36,7 +40,8 @@ export interface Step extends BaseStep {
    */
   api?: string;
   /**
-   * The name where the value will be stored.
+   * The name where the value from the user
+   * or api response will be stored.
    */
   name?: string;
   /**
