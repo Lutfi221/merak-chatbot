@@ -1,0 +1,53 @@
+{
+  "pages": {
+    "/start": [
+      {
+        "content": "Get country facts! \n1. Search by name\n2. Search by capital",
+        "links": {
+          "1": "/name",
+          "2": "/capital"
+        },
+        "clearData": true
+      }
+    ],
+    "/name": [
+      {
+        "name": "search-by",
+        "value": "name"
+      },
+      {
+        "content": "Write the country's name. It doesn't have to be complete.\n\nExamples: 'indonesia', 'indones', 'america', 'japan'.",
+        "name": "query",
+        "userInput": true,
+        "userInputValidator": "^[\\D\\S]+$"
+      },
+      {
+        "content": "Fetching country's info...",
+        "next": "/fetch"
+      }
+    ],
+    "/capital": [
+      {
+        "name": "search-by",
+        "value": "capital"
+      },
+      {
+        "content": "Write the country's capital. It doesn't have to be complete.\n\nExamples: 'jakarta', 'jakart', 'washington', 'tokyo'.",
+        "name": "query",
+        "userInput": true,
+        "userInputValidator": "^[\\D\\S]+$"
+      },
+      {
+        "content": "Fetching country's info...",
+        "next": "/fetch"
+      }
+    ],
+    "/fetch": [
+      {
+        "name": "country",
+        "api": "https://restcountries.eu/rest/v2/{{search-by}}/{{query}}",
+        "content": "Name: {{country.0.name}}\nCapital: {{country.0.capital}}\nPopulasi: {{country.0.population}}\nFlag: {{country.0.flag}}"
+      }
+    ]
+  }
+}
