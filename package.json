@@ -2,6 +2,10 @@
   "name": "merak-chatbot",
   "version": "1.0.0",
   "description": "Decision tree based chat bot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lutfi221/merak-chatbot.git"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -17,7 +21,10 @@
     "bot",
     "chatbot"
   ],
-  "author": "Lutfi Azis Hafiizhudin <17lutfi21@gmail.com>",
+  "author": {
+    "name": "Lutfi Azis Hafiizhudin",
+    "email": "17lutfi21@gmail.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^15.14.9",
