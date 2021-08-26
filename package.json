@@ -14,6 +14,7 @@
     "start": "ts-node ./src/simulator.ts",
     "build": "tsc",
     "prettier": "prettier --write .",
+    "prepare": "npm run build",
     "watch": "nodemon"
   },
   "keywords": [
