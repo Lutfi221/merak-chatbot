@@ -54,6 +54,11 @@ export interface Step extends BaseStep {
    * Values mapped to their user input key.
    */
   values?: { [key: string]: Value };
+  /**
+   * Simulates a user's input.
+   * Will set the key's name to value.
+   */
+  value?: any;
 }
 
 export type Data = {

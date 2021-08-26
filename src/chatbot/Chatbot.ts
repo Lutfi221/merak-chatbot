@@ -180,6 +180,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.emitOutput(step.content);
 
       if (needsInput) {
+        if (typeof step.value !== "undefined") {
+          this.storage[step.name!] = step.value;
+          this.next();
+          continue;
+        }
         this.setStatus(Status.WaitingInput);
         this.running = false;
         return;
@@ -247,6 +252,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
   private stepNeedsInput(step: Step): boolean {
     return (
+      typeof step.name !== "undefined" ||
       typeof step.links !== "undefined" ||
       step.userInput ||
       typeof step.values !== "undefined"
