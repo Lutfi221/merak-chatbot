@@ -40,10 +40,6 @@ const main = async () => {
     chatbot.input(await ask());
   });
 
-  chatbot.on("steps-complete", (data) => {
-    console.log(data);
-  });
-
   chatbot.initialize();
 };
 
