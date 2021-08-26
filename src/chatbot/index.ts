@@ -62,3 +62,5 @@ export interface Page extends BasePage {
 export type Data = {
   pages: { [link: string]: Page[] };
 };
+
+export { default } from "./Chatbot";
