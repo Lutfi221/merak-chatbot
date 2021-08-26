@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-import { Data, Link, Page } from "./index";
+import { Data, Link, Step } from "./index";
 
 export type Head = {
   /**
@@ -12,7 +12,7 @@ export type Head = {
    */
   index: number;
   /**
-   * The amount of steps in a page
+   * The amount of steps in a step
    */
   stepsAmount: number;
 };
@@ -56,10 +56,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
   /**
    * Gets the text content from the current
-   * page.
+   * step.
    */
   getPrompt(): string | undefined {
-    return this.getCurrentPage().content;
+    return this.getCurrentStep().content;
   }
 
   /**
@@ -74,7 +74,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    *
    * @param      input  User input
    *
-   * @return     a promise of the next page's text content.
+   * @return     a promise of the next step's text content.
    */
   async input(input?: string) {
     if (this.status !== Status.WaitingInput) return;
@@ -82,49 +82,49 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
     this.setStatus(Status.Busy);
 
-    const page = this.getCurrentPage();
+    const step = this.getCurrentStep();
     let inputMatchedWithValues = false;
 
-    if (page.links) {
+    if (step.links) {
       /**
        * Search for matches in "links".
        */
-      for (let key in page.links) {
+      for (let key in step.links) {
         if (input === key) {
-          this.navigate(page.links[key]);
+          this.navigate(step.links[key]);
           this.run();
           return;
         }
       }
     }
 
-    if (page.values) {
+    if (step.values) {
       /**
        * Search for matches in "values".
        */
-      for (let key in page.values) {
+      for (let key in step.values) {
         if (input === key) {
-          if (!page.name)
+          if (!step.name)
             throw new Error(
-              `name is missing at page ${this.head.page}[${this.head.index}]`,
+              `name is missing at step ${this.head.page}[${this.head.index}]`,
             );
 
-          this.storage[page.name] = page.values[key];
+          this.storage[step.name] = step.values[key];
           inputMatchedWithValues = true;
           break;
         }
       }
     }
 
-    if (page.userInput && !inputMatchedWithValues) {
+    if (step.userInput && !inputMatchedWithValues) {
       let pattern: RegExp;
 
-      if (!page.userInputValidator) {
+      if (!step.userInputValidator) {
         pattern = RegExp("");
-      } else if (typeof page.userInputValidator === "string") {
-        pattern = RegExp(page.userInputValidator);
+      } else if (typeof step.userInputValidator === "string") {
+        pattern = RegExp(step.userInputValidator);
       } else {
-        pattern = page.userInputValidator;
+        pattern = step.userInputValidator;
       }
 
       if (!pattern.test(input)) {
@@ -133,18 +133,18 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         return;
       }
 
-      if (!page.name)
+      if (!step.name)
         throw new Error(
-          `name is missing at page ${this.head.page}[${this.head.index}]`,
+          `name is missing at step ${this.head.page}[${this.head.index}]`,
         );
 
-      this.storage[page.name] = input;
+      this.storage[step.name] = input;
     }
 
     /**
      * If the user's input doesn't matched anything
      */
-    if (!page.userInput && !inputMatchedWithValues) {
+    if (!step.userInput && !inputMatchedWithValues) {
       /**
        * Resend the last step's message.
        */
@@ -156,7 +156,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.run();
   }
 
-  getCurrentPage(): Page {
+  getCurrentStep(): Step {
     return this.data.pages[this.head.page][this.head.index];
   }
 
@@ -170,14 +170,14 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.setStatus(Status.Busy);
 
     while (true) {
-      const page = this.getCurrentPage();
-      const needsInput = this.pageNeedsInput(page);
+      const step = this.getCurrentStep();
+      const needsInput = this.stepNeedsInput(step);
 
-      if (page.api) {
+      if (step.api) {
         // TODO: fetch api
       }
 
-      this.emitOutput(page.content);
+      this.emitOutput(step.content);
 
       if (needsInput) {
         this.setStatus(Status.WaitingInput);
@@ -192,7 +192,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   /**
    * Update "head" to the page and index
    *
-   * @param      page   Page
+   * @param      step   Step
    * @param      index  Step index
    */
   private navigate(page?: Link, index = 0) {
@@ -245,11 +245,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.emit("output", message);
   }
 
-  private pageNeedsInput(page: Page): boolean {
+  private stepNeedsInput(step: Step): boolean {
     return (
-      typeof page.links !== "undefined" ||
-      page.userInput ||
-      typeof page.values !== "undefined"
+      typeof step.links !== "undefined" ||
+      step.userInput ||
+      typeof step.values !== "undefined"
     );
   }
 }

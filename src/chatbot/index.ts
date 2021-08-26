@@ -10,9 +10,9 @@ export type Link = string;
 export type Value = any;
 
 /**
- * Basic page
+ * Basic step
  */
-export type BasePage = {
+export type BaseStep = {
   /**
    * Text to be sent to the user.
    */
@@ -23,10 +23,7 @@ export type BasePage = {
   links?: { [key: string]: Link };
 };
 
-/**
- * Page to request input from the user.
- */
-export interface Page extends BasePage {
+export interface Step extends BaseStep {
   /**
    * URL to be sent a request.
    * 
@@ -60,5 +57,5 @@ export interface Page extends BasePage {
 }
 
 export type Data = {
-  pages: { [link: string]: Page[] };
+  pages: { [link: string]: Step[] };
 };
