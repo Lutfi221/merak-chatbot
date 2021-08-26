@@ -1,6 +1,7 @@
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 import { Data, Link, Step, Value } from "./index";
+import fetch from "node-fetch";
 
 export type Head = {
   /**
@@ -174,7 +175,14 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       const needsInput = this.stepNeedsInput(step);
 
       if (step.api) {
-        // TODO: fetch api
+        const url = this.substituteVariables(step.api);
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          this.storage[step.name!] = data;
+        } catch (err) {
+          // TODO: handle api error.
+        }
       }
 
       this.emitOutput();
@@ -266,7 +274,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * string.
    */
   private substituteVariables(message: string): string {
-    const pattern = /{{.+}}/g;
+    const pattern = /{{[^{]+}}/g;
     const out = message.replaceAll(pattern, (s) => {
       /**
        * Removes the "{{" and "}}"
