@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import TypedEmitter from "typed-emitter";
+import TypedEmitter from "../../types/typed-emitter";
 import { Data, Link, Step, Value } from "./index";
 import fetch from "node-fetch";
 
