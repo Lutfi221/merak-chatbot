@@ -26,7 +26,7 @@ const ask = (q?: string): Promise<string> => {
 };
 
 const main = async () => {
-  const path = await ask("Input chatbot data file path (.js)");
+  const path = await ask("Input chatbot data file path (.json)");
   const data = JSON.parse(fs.readFileSync(path, "utf8"));
 
   const chatbot = new Chatbot(data);
