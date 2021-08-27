@@ -275,7 +275,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    */
   private substituteVariables(message: string): string {
     const pattern = /{{[^{]+}}/g;
-    const out = message.replaceAll(pattern, (s) => {
+    const out = message.replace(pattern, (s) => {
       /**
        * Removes the "{{" and "}}"
        */
