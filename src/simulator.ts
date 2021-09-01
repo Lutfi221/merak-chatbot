@@ -1,6 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 import Chatbot, { Status } from "./chatbot/Chatbot";
+import { Data } from "./chatbot";
 
 /**
  * Ask for user's input
@@ -25,11 +26,23 @@ const ask = (q?: string): Promise<string> => {
   );
 };
 
+const printTriggers = (triggers: { [trigger: string]: string }) => {
+  if (triggers) {
+    let triggersMessage = "TRIGGERS: \n";
+    for (let trigger in triggers) {
+      triggersMessage += trigger + "\n";
+    }
+    console.log(triggersMessage);
+  }
+};
+
 const main = async () => {
   const path = await ask("Input chatbot data file path (.json)");
-  const data = JSON.parse(fs.readFileSync(path, "utf8"));
+  const data = JSON.parse(fs.readFileSync(path, "utf8")) as Data;
 
   const chatbot = new Chatbot(data);
+
+  if (data.triggers) printTriggers(data.triggers);
 
   chatbot.on("output", (message) => {
     console.log("\n" + message + "\n");
@@ -38,6 +51,10 @@ const main = async () => {
   chatbot.on("status-change", async (status) => {
     if (status !== Status.WaitingInput) return;
     chatbot.input(await ask());
+  });
+
+  chatbot.on("steps-complete", () => {
+    if (data.triggers) printTriggers(data.triggers);
   });
 
   chatbot.initialize();
