@@ -1,4 +1,11 @@
 {
+  "triggers": {
+    "/hello": "/hello",
+    "/facts": "/start",
+    "/name": "/name",
+    "/capital": "/capital",
+    "/help": "/help"
+  },
   "pages": {
     "/start": [
       {
@@ -6,8 +13,13 @@
         "links": {
           "1": "/name",
           "2": "/capital"
-        },
-        "clearData": true
+        }
+      }
+    ],
+    "/hello": [
+      {
+        "content": "Hello!",
+        "next": "/start"
       }
     ],
     "/name": [
@@ -48,6 +60,7 @@
         "api": "https://restcountries.eu/rest/v2/{{search-by}}/{{query}}",
         "content": "Name: {{country.0.name}}\nCapital: {{country.0.capital}}\nPopulasi: {{country.0.population}}\nFlag: {{country.0.flag}}"
       }
-    ]
+    ],
+    "/help": [{ "content": "Try typing /hello , /name ,or /capital" }]
   }
 }
