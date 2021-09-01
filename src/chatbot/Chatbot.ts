@@ -7,7 +7,7 @@ export type Head = {
   /**
    * Current page
    */
-  page: Link;
+  page: Link | null;
   /**
    * Current step index
    */
@@ -38,7 +38,7 @@ export interface Events {
 
 export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Events>) {
   head: Head = {
-    page: "/start",
+    page: null,
     index: 0,
     stepsAmount: 1,
   };
@@ -48,9 +48,14 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    */
   storage: Storage = {};
   status = Status.Uninitialized;
+  private hasTriggers = true;
   private running;
   constructor(data: Data) {
     super();
+    if (!data.triggers) {
+      this.hasTriggers = false;
+      this.head.page = "/start";
+    }
     this.data = data;
     this.running = false;
   }
@@ -82,6 +87,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     if (!input) return;
 
     this.setStatus(Status.Busy);
+
+    if (this.head.page === null) {
+      for (let trigger in this.data.triggers!) {
+        if (trigger === input) {
+          this.navigate(this.data.triggers[trigger]);
+          this.run();
+          return;
+        }
+      }
+      this.setStatus(Status.WaitingInput);
+    }
 
     const step = this.getCurrentStep();
     let inputMatchedWithValues = false;
@@ -157,7 +173,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.run();
   }
 
+  /**
+   * Gets the current step.
+   *
+   * If the current page is null, returns {}
+   */
   getCurrentStep(): Step {
+    if (!this.head.page) return {};
     return this.data.pages[this.head.page][this.head.index];
   }
 
@@ -171,6 +193,12 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.setStatus(Status.Busy);
 
     while (true) {
+      if (this.head.page === null) {
+        this.setStatus(Status.WaitingInput);
+        this.running = false;
+        return;
+      }
+
       const step = this.getCurrentStep();
       const needsInput = this.stepNeedsInput(step);
 
@@ -208,7 +236,12 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * @param      step   Step
    * @param      index  Step index
    */
-  private navigate(page?: Link, index = 0) {
+  private navigate(page?: Link | null, index = 0) {
+    if (page === null) {
+      this.head.page = null;
+      this.head.index = 0;
+      this.head.stepsAmount = 0;
+    }
     if (page) {
       this.head.page = page;
       this.head.stepsAmount = this.data.pages[page].length;
@@ -235,7 +268,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
      */
     if (this.head.stepsAmount === this.head.index + 1) {
       this.emit("steps-complete", this.storage);
-      this.navigate("/start");
+      this.navigate(this.hasTriggers ? null : "/start", 0);
       return;
     }
 

@@ -67,5 +67,9 @@ export interface Step extends BaseStep {
 }
 
 export type Data = {
+  /**
+   * Map of triggers to page names
+   */
+  triggers?: { [trigger: string]: string };
   pages: { [link: string]: Step[] };
 };
