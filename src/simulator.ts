@@ -37,18 +37,30 @@ const printTriggers = (triggers: { [trigger: string]: string }) => {
 };
 
 const main = async () => {
-  const path = await ask(
+  let data: Data;
+  let dataLoaded = false;
+
+  console.log(
     "Input chatbot data file path (.json)\n" +
       "Absolute path or relative.\n\n" +
       "examples:\n" +
       '"./samples/country-facts.json"\n' +
       '"D:\\Projects\\merak-chatbot\\samples\\country-facts.json"',
   );
-  const data = JSON.parse(fs.readFileSync(path, "utf8")) as Data;
 
-  const chatbot = new Chatbot(data);
+  while (!dataLoaded) {
+    try {
+      const path = await ask();
+      data = JSON.parse(fs.readFileSync(path, "utf8")) as Data;
+      dataLoaded = true;
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
-  if (data.triggers) printTriggers(data.triggers);
+  const chatbot = new Chatbot(data!);
+
+  if (data!.triggers) printTriggers(data!.triggers);
 
   chatbot.on("output", (message) => {
     console.log("\n" + message + "\n");
