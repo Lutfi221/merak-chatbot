@@ -13,6 +13,7 @@
     "test:watch": "jest --watchAll",
     "start": "node ./dist/simulator.js",
     "build": "tsc",
+    "docs": "typedoc ./src/index.ts",
     "prettier": "prettier --write .",
     "prepare": "npm run build",
     "watch": "nodemon"
@@ -34,6 +35,7 @@
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
     "ts-node": "^10.2.1",
+    "typedoc": "^0.21.9",
     "typescript": "^4.3.5"
   },
   "dependencies": {

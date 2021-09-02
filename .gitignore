@@ -1,6 +1,9 @@
 
 design/
 
+# Docs
+docs/
+
 # https://github.com/beeman/template-typescript-package/blob/master/.gitignore
 .DS_Store
 
