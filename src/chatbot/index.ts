@@ -40,6 +40,10 @@ export interface Step extends BaseStep {
    */
   api?: string;
   /**
+   * Deletes all variables.
+   */
+  clearVariables?: boolean;
+  /**
    * The name where the value from the user
    * or api response will be stored.
    */

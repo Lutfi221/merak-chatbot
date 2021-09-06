@@ -202,6 +202,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       const step = this.getCurrentStep();
       const needsInput = this.stepNeedsInput(step);
 
+      if (step.clearVariables) {
+        this.storage = {};
+      }
+
       if (step.api) {
         const url = this.substituteVariables(step.api);
         try {
