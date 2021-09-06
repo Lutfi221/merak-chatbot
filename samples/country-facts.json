@@ -1,4 +1,7 @@
 {
+  "settings": {
+    "caseSensitiveTrigger": false
+  },
   "triggers": {
     "/hello": "/hello",
     "/facts": "/start",

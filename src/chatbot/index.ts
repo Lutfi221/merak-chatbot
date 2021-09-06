@@ -76,7 +76,18 @@ export interface Step extends BaseStep {
   value?: Value;
 }
 
+export type Settings = {
+  /**
+   * Compare user input to triggers with
+   * sensitivity to casing.
+   *
+   * Defaults to false.
+   */
+  caseSensitiveTrigger?: boolean;
+};
+
 export type Data = {
+  settings?: Settings;
   /**
    * Map of triggers to page names
    */
