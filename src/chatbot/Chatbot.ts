@@ -189,6 +189,9 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    */
   getCurrentStep(): Step {
     if (!this.head.page) return {};
+    if (!Array.isArray(this.data.pages[this.head.page])) {
+      return this.data.pages[this.head.page];
+    }
     return this.data.pages[this.head.page][this.head.index];
   }
 
@@ -257,7 +260,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
     if (page) {
       this.head.page = page;
-      this.head.stepsAmount = this.data.pages[page].length;
+      if (!Array.isArray(this.data.pages[page])) {
+        this.head.stepsAmount = 1;
+        return;
+      }
+      this.head.stepsAmount = (this.data.pages[page] as Step[]).length;
     }
     this.head.index = index;
   }
@@ -279,7 +286,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     /**
      * If the head is on the last step.
      */
-    if (this.head.stepsAmount === this.head.index + 1) {
+    if (this.head.stepsAmount <= this.head.index + 1) {
       this.emit("steps-complete", this.storage);
       this.navigate(this.hasTriggers ? null : "/start", 0);
       return;
