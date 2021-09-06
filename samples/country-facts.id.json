@@ -9,6 +9,7 @@
   "pages": {
     "/start": [
       {
+        "clearVariables": true,
         "content": "Dapatkan fakta-fakta negara! \n1. Cari berdasarkan nama\n2. Cari berdasarkan ibu kota",
         "links": { "1": "/name", "2": "/capital" }
       }

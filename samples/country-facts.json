@@ -9,6 +9,7 @@
   "pages": {
     "/start": [
       {
+        "clearVariables": true,
         "content": "Get country facts! \n1. Search by name\n2. Search by capital",
         "links": {
           "1": "/name",
