@@ -145,7 +145,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
 
       if (!pattern.test(input)) {
-        // TODO: handle unmatched input
+        this.emitOutput(step.invalidInputMessage);
         this.setStatus(Status.WaitingInput);
         return;
       }

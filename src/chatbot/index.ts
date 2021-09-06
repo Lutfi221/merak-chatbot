@@ -60,6 +60,12 @@ export interface Step extends BaseStep {
    */
   userInputValidator?: string | RegExp;
   /**
+   * The message to show when the user inputs
+   * something that doesn't matches
+   * "userInputValidator".
+   */
+  invalidInputMessage?: string;
+  /**
    * Values mapped to their user input key.
    */
   values?: { [key: string]: Value };
