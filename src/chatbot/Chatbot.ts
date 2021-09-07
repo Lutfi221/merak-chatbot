@@ -111,6 +111,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
     const step = this.getCurrentStep();
     let inputMatchedWithValues = false;
+    let linkedPage = "";
 
     if (step.links) {
       /**
@@ -118,9 +119,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
        */
       for (let key in step.links) {
         if (input === key) {
-          this.navigate(step.links[key]);
-          this.run();
-          return;
+          linkedPage = step.links[key];
         }
       }
     }
@@ -146,6 +145,15 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           break;
         }
       }
+    }
+
+    /**
+     * To allow "values" and "links" to overlap.
+     */
+    if (linkedPage) {
+      this.navigate(linkedPage);
+      this.run();
+      return;
     }
 
     if (step.userInput && !inputMatchedWithValues) {
