@@ -34,6 +34,7 @@ export interface Events {
    * completed.
    */
   "steps-complete": (storage: Storage) => void;
+  error: (error: Error) => void;
 }
 
 export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Events>) {
@@ -130,10 +131,15 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
        */
       for (let key in step.values) {
         if (input === key) {
-          if (!step.name)
-            throw new Error(
-              `name is missing at step ${this.head.page}[${this.head.index}]`,
+          if (!step.name) {
+            this.emit(
+              "error",
+              new Error(
+                `'name' is missing at step '${this.head.page}[${this.head.index}]'.`,
+              ),
             );
+            break;
+          }
 
           this.storage[step.name] = step.values[key];
           inputMatchedWithValues = true;
@@ -159,10 +165,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         return;
       }
 
-      if (!step.name)
-        throw new Error(
-          `name is missing at step ${this.head.page}[${this.head.index}]`,
+      if (!step.name) {
+        this.emit(
+          "error",
+          new Error(
+            `'name' is missing at step '${this.head.page}[${this.head.index}]'.`,
+          ),
         );
+        this.next();
+        this.run();
+        return;
+      }
 
       this.storage[step.name] = input;
     }
@@ -189,10 +202,18 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    */
   getCurrentStep(): Step {
     if (!this.head.page) return {};
-    if (!Array.isArray(this.data.pages[this.head.page])) {
-      return this.data.pages[this.head.page];
+    return this.getStep(this.head.page, this.head.index);
+  }
+
+  private getStep(page: string, index = 0): Step {
+    if (typeof this.data.pages[page] === "undefined") {
+      this.emit("error", new Error(`Page '${page}' does not exist.`));
+      return {};
     }
-    return this.data.pages[this.head.page][this.head.index];
+    if (!Array.isArray(this.data.pages[page])) {
+      return this.data.pages[page];
+    }
+    return this.data.pages[page][index];
   }
 
   /**

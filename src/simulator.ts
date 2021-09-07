@@ -75,6 +75,10 @@ const main = async () => {
     if (data.triggers) printTriggers(data.triggers);
   });
 
+  chatbot.on("error", (err) => {
+    console.error(err);
+  });
+
   chatbot.initialize();
 };
 
