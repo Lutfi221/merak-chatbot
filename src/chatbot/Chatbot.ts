@@ -111,7 +111,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
     const step = this.getCurrentStep();
     let inputMatchedWithValues = false;
-    let linkedPage = "";
+    let link: Link = "";
 
     if (step.links) {
       /**
@@ -119,7 +119,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
        */
       for (let key in step.links) {
         if (input === key) {
-          linkedPage = step.links[key];
+          link = step.links[key];
         }
       }
     }
@@ -150,8 +150,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     /**
      * To allow "values" and "links" to overlap.
      */
-    if (linkedPage) {
-      this.navigate(linkedPage);
+    if (link) {
+      this.navigate(link);
       this.run();
       return;
     }
@@ -276,19 +276,37 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   }
 
   /**
-   * Update "head" to the page and index
+   * Update "head" to the link and index
    *
-   * @param      step   Step
+   * @param      link   Link
    * @param      index  Step index
    */
-  private navigate(page?: Link | null, index = 0) {
-    if (page === null) {
+  private navigate(link?: Link | null, index = 0) {
+    if (link === null) {
       this.head.page = null;
       this.head.index = 0;
       this.head.stepsAmount = 0;
     }
-    if (page) {
+    if (link) {
+      let page = link;
+      /**
+       * If the link has a specific index, it will split it to
+       * a page name and index.
+       *
+       * e.g. "/start[1]" will turn to "/start" and 1.
+       */
+      if (link.includes("[")) {
+        /**
+         * Removes the last character "]"
+         */
+        let foo = link.slice(0, -1);
+        let bar = foo.split("[");
+        page = bar[0];
+        index = parseInt(bar[1]);
+      }
+
       this.head.page = page;
+
       if (!Array.isArray(this.data.pages[page])) {
         this.head.stepsAmount = 1;
         return;

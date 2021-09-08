@@ -1,9 +1,12 @@
 /**
- * A string starting with a "/". This is used to navigate between pages.
+ * A string starting with a "/", and optionally ending with an
+ * index "[2]". The index starts at zero.
+ *
+ * This is used to navigate between pages.
  *
  * @example
  * // Examples of valid links
- * ["/start", "/home", "/order"];
+ * ["/start", "/home", "/order[2]"];
  */
 export type Link = string;
 
