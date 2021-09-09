@@ -56,6 +56,9 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     if (!data.triggers) {
       this.hasTriggers = false;
       this.head.page = "/start";
+      if (Array.isArray(data.pages["/start"])) {
+        this.head.stepsAmount = (data.pages["/start"] as Step[]).length;
+      }
     }
     this.data = data;
     this.running = false;
