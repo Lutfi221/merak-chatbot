@@ -207,6 +207,47 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   }
 
   /**
+   * Update "head" to the link and index
+   *
+   * @param      link   Link
+   * @param      index  Step index
+   */
+  navigate(link?: Link | null, index = 0) {
+    if (link === null) {
+      this.head.page = null;
+      this.head.index = 0;
+      this.head.stepsAmount = 0;
+    }
+    if (link) {
+      let page = link;
+      /**
+       * If the link has a specific index, it will split it to
+       * a page name and index.
+       *
+       * e.g. "/start[1]" will turn to "/start" and 1.
+       */
+      if (link.includes("[")) {
+        /**
+         * Removes the last character "]"
+         */
+        let foo = link.slice(0, -1);
+        let bar = foo.split("[");
+        page = bar[0];
+        index = parseInt(bar[1]);
+      }
+
+      this.head.page = page;
+
+      if (!Array.isArray(this.data.pages[page])) {
+        this.head.stepsAmount = 1;
+        return;
+      }
+      this.head.stepsAmount = (this.data.pages[page] as Step[]).length;
+    }
+    this.head.index = index;
+  }
+
+  /**
    * Gets the current step.
    *
    * If the current page is null, returns {}
@@ -276,47 +317,6 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
       this.next();
     }
-  }
-
-  /**
-   * Update "head" to the link and index
-   *
-   * @param      link   Link
-   * @param      index  Step index
-   */
-  private navigate(link?: Link | null, index = 0) {
-    if (link === null) {
-      this.head.page = null;
-      this.head.index = 0;
-      this.head.stepsAmount = 0;
-    }
-    if (link) {
-      let page = link;
-      /**
-       * If the link has a specific index, it will split it to
-       * a page name and index.
-       *
-       * e.g. "/start[1]" will turn to "/start" and 1.
-       */
-      if (link.includes("[")) {
-        /**
-         * Removes the last character "]"
-         */
-        let foo = link.slice(0, -1);
-        let bar = foo.split("[");
-        page = bar[0];
-        index = parseInt(bar[1]);
-      }
-
-      this.head.page = page;
-
-      if (!Array.isArray(this.data.pages[page])) {
-        this.head.stepsAmount = 1;
-        return;
-      }
-      this.head.stepsAmount = (this.data.pages[page] as Step[]).length;
-    }
-    this.head.index = index;
   }
 
   /**
