@@ -65,8 +65,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * Gets the text content from the current
    * step.
    */
-  getPrompt(): string | undefined {
-    return this.getCurrentStep().content;
+  getPrompt(): string {
+    return this.getCurrentStep().content || "";
   }
 
   /**
