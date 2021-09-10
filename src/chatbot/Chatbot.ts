@@ -55,7 +55,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   head: Head = {
     page: null,
     index: 0,
-    stepsAmount: 1,
+    stepsAmount: 0,
   };
   data: Data;
   /**
