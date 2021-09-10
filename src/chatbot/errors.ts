@@ -1,15 +1,20 @@
-
-export class MissingPropertyError extends Error {
+export class ChatbotError extends Error {
   page: string;
   index: number;
-  constructor(property: string, page?: string | null, index?: number) {
-    let message = `Missing property: '${property}'`;
-    if (page) message += ` at ${page}`;
-    if (index) message += `[${index}]`;
+  constructor(page: string | null, index: number) {
+    if (!page) page = "null";
+    super(`An error occured at '${page}[${index}]'`);
 
-    super(message);
+    this.name = "ChatbotError";
+    this.page = page;
+    this.index = index;
+  }
+}
+
+export class MissingPropertyError extends ChatbotError {
+  constructor(property: string, page: string | null, index: number) {
+    super(page, index);
     this.name = "MissingPropertyError";
-    this.page = page || "";
-    this.index = index || 0;
+    this.message = `Missing property '${property}' at ${page}[${index}]`;
   }
 }

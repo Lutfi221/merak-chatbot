@@ -166,7 +166,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           if (!step.name) {
             this.emit(
               "error",
-              new errors.MissingPropertyError("name", this.head.page, this.head.index)
+              new errors.MissingPropertyError(
+                "name",
+                this.head.page,
+                this.head.index,
+              ),
             );
             break;
           }
@@ -207,7 +211,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (!step.name) {
         this.emit(
           "error",
-          new errors.MissingPropertyError("name", this.head.page, this.head.index)
+          new errors.MissingPropertyError(
+            "name",
+            this.head.page,
+            this.head.index,
+          ),
         );
         this.next();
         this.run();
