@@ -18,3 +18,15 @@ export class MissingPropertyError extends ChatbotError {
     this.message = `Missing property '${property}' at ${page}[${index}]`;
   }
 }
+
+export class FreefallError extends ChatbotError {
+  freefallAmount: number;
+  constructor(freefallAmount: number, page: string | null, index: number) {
+    super(page, index);
+    this.name = "FreefallError";
+    this.message =
+      `A potential infinite loop at ${page}[${index}]\n` +
+      `If this is intentional, increase 'options.freefallLimit'.`;
+    this.freefallAmount = freefallAmount;
+  }
+}

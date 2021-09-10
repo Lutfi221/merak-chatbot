@@ -1,5 +1,6 @@
-import Chatbot from "../Chatbot";
+import Chatbot, { Status } from "../Chatbot";
 import { Data } from "../index";
+import { FreefallError } from "../errors";
 
 const base: Data = {
   pages: {
@@ -76,4 +77,32 @@ test("navigation", (done) => {
   });
 
   chatbot.input("/err");
+});
+
+it("should detect freefall", () => {
+  const steps = [];
+  for (var i = 0; i < 40; ++i) {
+    steps.push({
+      content: `falls-through ${i}`,
+    });
+  }
+
+  const data = { pages: { "/start": steps } };
+
+  let chatbot = new Chatbot(data, { freefallLimit: 25 });
+  let mockErrorHandler = jest.fn((error: Error) => {
+    expect(error).toBeInstanceOf(FreefallError);
+    expect((error as FreefallError).freefallAmount).toBe(25);
+  });
+
+  chatbot.on("error", mockErrorHandler);
+  chatbot.initialize();
+
+  expect(chatbot.status).toBe(Status.WaitingInput);
+  expect(chatbot.head).toMatchObject({
+    page: null,
+    index: 0,
+    stepsAmount: 0,
+  });
+  expect(mockErrorHandler.mock.calls.length).toBe(1);
 });
