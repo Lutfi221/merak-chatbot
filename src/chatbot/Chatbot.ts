@@ -123,6 +123,12 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.setStatus(Status.Busy);
 
     if (this.head.page === null) {
+      if (!this.hasTriggers) {
+        this.navigate("/start");
+        this.run();
+        return;
+      }
+      
       const caseSensitive = this.data.settings?.caseSensitiveTrigger;
       let compare: (a: string, b: string) => boolean;
 

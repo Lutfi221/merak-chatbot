@@ -58,6 +58,10 @@ test("navigation", (done) => {
 
   expect(outputs).toEqual(["0", "1", "0", "2", "0", "3", "4", "5", "0"]);
 
+  chatbot.navigate(null);
+  chatbot.input("foo");
+  expect(chatbot.getPrompt()).toBe("0");
+
   /**
    * To prevent jest from saying unhandled error
    */
