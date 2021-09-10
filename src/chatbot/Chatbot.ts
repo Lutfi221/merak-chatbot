@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
 import { Data, Link, Step, Value } from "./index";
 import fetch from "node-fetch";
+import * as errors from "./errors";
 
 export type Head = {
   /**
@@ -48,13 +49,24 @@ export type Options = {
    * 'outputs' property.
    */
   outputRecordingEnabled?: boolean;
+  /**
+   * The limit of steps without a required input.
+   * To help detect freefalling unstoppable infinite loops.
+   */
+  freefallLimit?: number;
+};
+
+export const DEFAULT_OPTIONS: Required<Options> = {
+  inputRecordingEnabled: false,
+  outputRecordingEnabled: false,
+  freefallLimit: 20,
 };
 
 export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Events>) {
   head: Head = {
     page: null,
     index: 0,
-    stepsAmount: 1,
+    stepsAmount: 0,
   };
   data: Data;
   /**
@@ -62,10 +74,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    */
   storage: Storage = {};
   status = Status.Uninitialized;
-  readonly options: Options;
+  readonly options: Required<Options>;
 
   inputs: string[] = [];
   outputs: string[] = [];
+  private stepsSinceLastInput = 0;
   private hasTriggers = true;
   private running;
   constructor(data: Data, options: Options = {}) {
@@ -79,7 +92,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
 
     this.data = data;
-    this.options = options;
+    this.options = { ...DEFAULT_OPTIONS, ...options };
     this.running = false;
 
     if (this.options.outputRecordingEnabled) {
@@ -122,6 +135,12 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.setStatus(Status.Busy);
 
     if (this.head.page === null) {
+      if (!this.hasTriggers) {
+        this.navigate("/start");
+        this.run();
+        return;
+      }
+
       const caseSensitive = this.data.settings?.caseSensitiveTrigger;
       let compare: (a: string, b: string) => boolean;
 
@@ -165,8 +184,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           if (!step.name) {
             this.emit(
               "error",
-              new Error(
-                `'name' is missing at step '${this.head.page}[${this.head.index}]'.`,
+              new errors.MissingPropertyError(
+                "name",
+                this.head.page,
+                this.head.index,
               ),
             );
             break;
@@ -208,8 +229,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (!step.name) {
         this.emit(
           "error",
-          new Error(
-            `'name' is missing at step '${this.head.page}[${this.head.index}]'.`,
+          new errors.MissingPropertyError(
+            "name",
+            this.head.page,
+            this.head.index,
           ),
         );
         this.next();
@@ -334,6 +357,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.emitOutput();
 
       if (needsInput) {
+        this.stepsSinceLastInput = 0;
         if (typeof step.value !== "undefined") {
           this.storage[step.name!] = step.value;
           this.next();
@@ -344,6 +368,21 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         return;
       }
 
+      if (this.stepsSinceLastInput >= this.options.freefallLimit) {
+        this.emit(
+          "error",
+          new errors.FreefallError(
+            this.stepsSinceLastInput,
+            this.head.page,
+            this.head.index,
+          ),
+        );
+        this.setStatus(Status.WaitingInput);
+        this.running = false;
+        this.navigate(null);
+        return;
+      }
+      this.stepsSinceLastInput++;
       this.next();
     }
   }
