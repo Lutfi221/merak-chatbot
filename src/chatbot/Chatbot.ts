@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
 import { Data, Link, Step, Value } from "./index";
 import fetch from "node-fetch";
+import * as errors from "./errors";
 
 export type Head = {
   /**
@@ -165,9 +166,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           if (!step.name) {
             this.emit(
               "error",
-              new Error(
-                `'name' is missing at step '${this.head.page}[${this.head.index}]'.`,
-              ),
+              new errors.MissingPropertyError("name", this.head.page, this.head.index)
             );
             break;
           }
@@ -208,9 +207,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (!step.name) {
         this.emit(
           "error",
-          new Error(
-            `'name' is missing at step '${this.head.page}[${this.head.index}]'.`,
-          ),
+          new errors.MissingPropertyError("name", this.head.page, this.head.index)
         );
         this.next();
         this.run();
