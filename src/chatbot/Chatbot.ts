@@ -37,6 +37,19 @@ export interface Events {
   error: (error: Error) => void;
 }
 
+export type Options = {
+  /**
+   * If enabled, every user input will be pushed to
+   * 'inputs' property.
+   */
+  inputRecordingEnabled?: boolean;
+  /**
+   * If enabled, every chatbot output will be pushed to
+   * 'outputs' property.
+   */
+  outputRecordingEnabled?: boolean;
+};
+
 export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Events>) {
   head: Head = {
     page: null,
@@ -49,9 +62,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    */
   storage: Storage = {};
   status = Status.Uninitialized;
+  readonly options: Options;
+
+  inputs: string[] = [];
+  outputs: string[] = [];
   private hasTriggers = true;
   private running;
-  constructor(data: Data) {
+  constructor(data: Data, options: Options = {}) {
     super();
     if (!data.triggers) {
       this.hasTriggers = false;
@@ -60,8 +77,16 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         this.head.stepsAmount = (data.pages["/start"] as Step[]).length;
       }
     }
+
     this.data = data;
+    this.options = options;
     this.running = false;
+
+    if (this.options.outputRecordingEnabled) {
+      this.on("output", (msg) => {
+        this.outputs.push(msg);
+      });
+    }
   }
 
   /**
@@ -86,7 +111,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    *
    * @return     a promise of the next step's text content.
    */
-  async input(input?: string) {
+  async input(input = "") {
+    if (this.options.inputRecordingEnabled) {
+      this.inputs.push(input);
+    }
+
     if (this.status !== Status.WaitingInput) return;
     if (!input) return;
 
