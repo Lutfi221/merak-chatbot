@@ -310,16 +310,47 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   }
 
   /**
+   * Substitutes all the variables in an object or string
+   * without mutating the original object.
+   *
+   * @param      obj   A string, or a JSON-compatible object
+   */
+  substituteVariables<T>(obj: T): T {
+    if (typeof obj === "string")
+      return this.substituteVariablesInString(obj) as unknown as T;
+
+    const outputObj = JSON.parse(JSON.stringify(obj));
+    /**
+     * Goes over every properties in the object, and
+     * substitute the variables in every string.
+     */
+    const substitute = (obj: any) => {
+      Object.keys(obj).forEach((key) => {
+        if (typeof obj[key] === "object") {
+          substitute(obj[key]);
+          return;
+        }
+        if (typeof obj[key] === "string") {
+          obj[key] = this.substituteVariablesInString(obj[key]);
+        }
+      });
+    };
+
+    substitute(outputObj);
+    return outputObj;
+  }
+
+  /**
    * Substitutes all the variables in the
    * string.
    */
-  substituteVariables(message: string): string {
+  private substituteVariablesInString(s: string): string {
     const pattern = /{{[^{]+}}/g;
-    const out = message.replace(pattern, (s) => {
+    const out = s.replace(pattern, (varName) => {
       /**
        * Removes the "{{" and "}}"
        */
-      const varPath = s.slice(2, -2);
+      const varPath = varName.slice(2, -2);
       return this.getVariableValue(varPath);
     });
     return out;
