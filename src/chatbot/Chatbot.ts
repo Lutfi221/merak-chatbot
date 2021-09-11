@@ -309,6 +309,22 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     return this.getStep(this.head.page, this.head.index);
   }
 
+  /**
+   * Substitutes all the variables in the
+   * string.
+   */
+  substituteVariables(message: string): string {
+    const pattern = /{{[^{]+}}/g;
+    const out = message.replace(pattern, (s) => {
+      /**
+       * Removes the "{{" and "}}"
+       */
+      const varPath = s.slice(2, -2);
+      return this.getVariableValue(varPath);
+    });
+    return out;
+  }
+
   private getStep(page: string, index = 0): Step {
     if (typeof this.data.pages[page] === "undefined") {
       this.emit("error", new Error(`Page '${page}' does not exist.`));
@@ -438,22 +454,6 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
     message = this.substituteVariables(message);
     this.emit("output", message);
-  }
-
-  /**
-   * Substitutes all the variables in the
-   * string.
-   */
-  private substituteVariables(message: string): string {
-    const pattern = /{{[^{]+}}/g;
-    const out = message.replace(pattern, (s) => {
-      /**
-       * Removes the "{{" and "}}"
-       */
-      const varPath = s.slice(2, -2);
-      return this.getVariableValue(varPath);
-    });
-    return out;
   }
 
   /**
