@@ -12,6 +12,12 @@ export type Link = string;
 
 export type Value = any;
 
+export type Api = {
+  url: string;
+  method?: "GET" | "POST";
+  body?: any;
+};
+
 /**
  * Basic step
  */
@@ -32,7 +38,7 @@ export type BaseStep = {
 
 export interface Step extends BaseStep {
   /**
-   * URL to be sent a request.
+   * URL to be sent a request, or an api object.
    * 
    * @example
    * api=
@@ -41,7 +47,7 @@ export interface Step extends BaseStep {
       `&item={{item-name}}` +
       `&size={{item-size}}`
    */
-  api?: string;
+  api?: string | Api;
   /**
    * Deletes all variables.
    */

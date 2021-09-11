@@ -1,7 +1,8 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
-import { Data, Link, Step, Value } from "./index";
-import fetch from "node-fetch";
+import { Data, Link, Step, Value, Api } from "./index";
+import fetch, { Response } from "node-fetch";
+import { URLSearchParams } from "url";
 import * as errors from "./errors";
 
 export type Head = {
@@ -391,14 +392,51 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
 
       if (step.api) {
-        const url = this.substituteVariables(step.api);
-        try {
-          const res = await fetch(url);
-          const data = await res.json();
-          this.storage[step.name!] = data;
-        } catch (err) {
-          // TODO: handle api error.
+        let api: Api;
+        let res: Response;
+
+        if (typeof step.api === "string") {
+          api = { url: step.api, method: "GET" };
+        } else {
+          api = step.api;
+          if (!api.method) api.method = "GET";
         }
+
+        api = this.substituteVariables(api);
+
+        if (api.method!.toUpperCase() === "POST") {
+          let body: string;
+          if (typeof api.body === "string") {
+            body = api.body;
+          } else {
+            body = JSON.stringify(api.body);
+          }
+          try {
+            res = await fetch(api.url, {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: body,
+            });
+          } catch (err) {
+            //TODO: handle api error
+          }
+        } else {
+          try {
+            let url = api.url;
+            if (api.body) {
+              url = api.url + "?" + new URLSearchParams(api.body).toString();
+            }
+            res = await fetch(url);
+          } catch (err) {
+            //TODO: handle api error
+          }
+        }
+
+        const data = await res!.json();
+        this.storage[step.name!] = data;
       }
 
       this.emitOutput();
