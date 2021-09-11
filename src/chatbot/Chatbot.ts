@@ -1,7 +1,8 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
-import { Data, Link, Step, Value } from "./index";
-import fetch from "node-fetch";
+import { Data, Link, Step, Value, Api } from "./index";
+import fetch, { Response } from "node-fetch";
+import { URLSearchParams } from "url";
 import * as errors from "./errors";
 
 export type Head = {
@@ -309,6 +310,53 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     return this.getStep(this.head.page, this.head.index);
   }
 
+  /**
+   * Substitutes all the variables in an object or string
+   * without mutating the original object.
+   *
+   * @param      obj   A string, or a JSON-compatible object
+   */
+  substituteVariables<T>(obj: T): T {
+    if (typeof obj === "string")
+      return this.substituteVariablesInString(obj) as unknown as T;
+
+    const outputObj = JSON.parse(JSON.stringify(obj));
+    /**
+     * Goes over every properties in the object, and
+     * substitute the variables in every string.
+     */
+    const substitute = (obj: any) => {
+      Object.keys(obj).forEach((key) => {
+        if (typeof obj[key] === "object") {
+          substitute(obj[key]);
+          return;
+        }
+        if (typeof obj[key] === "string") {
+          obj[key] = this.substituteVariablesInString(obj[key]);
+        }
+      });
+    };
+
+    substitute(outputObj);
+    return outputObj;
+  }
+
+  /**
+   * Substitutes all the variables in the
+   * string.
+   */
+  private substituteVariablesInString(s: string): string {
+    const pattern = /{{[^{]+}}/g;
+    const out = s.replace(pattern, (varName) => {
+      /**
+       * Removes the "{{" and "}}"
+       */
+      const varPath = varName.slice(2, -2);
+      return this.getVariableValue(varPath);
+    });
+    return out;
+  }
+
   private getStep(page: string, index = 0): Step {
     if (typeof this.data.pages[page] === "undefined") {
       this.emit("error", new Error(`Page '${page}' does not exist.`));
@@ -344,14 +392,51 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
 
       if (step.api) {
-        const url = this.substituteVariables(step.api);
-        try {
-          const res = await fetch(url);
-          const data = await res.json();
-          this.storage[step.name!] = data;
-        } catch (err) {
-          // TODO: handle api error.
+        let api: Api;
+        let res: Response;
+
+        if (typeof step.api === "string") {
+          api = { url: step.api, method: "GET" };
+        } else {
+          api = step.api;
+          if (!api.method) api.method = "GET";
         }
+
+        api = this.substituteVariables(api);
+
+        if (api.method!.toUpperCase() === "POST") {
+          let body: string;
+          if (typeof api.body === "string") {
+            body = api.body;
+          } else {
+            body = JSON.stringify(api.body);
+          }
+          try {
+            res = await fetch(api.url, {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: body,
+            });
+          } catch (err) {
+            //TODO: handle api error
+          }
+        } else {
+          try {
+            let url = api.url;
+            if (api.body) {
+              url = api.url + "?" + new URLSearchParams(api.body).toString();
+            }
+            res = await fetch(url);
+          } catch (err) {
+            //TODO: handle api error
+          }
+        }
+
+        const data = await res!.json();
+        this.storage[step.name!] = data;
       }
 
       this.emitOutput();
@@ -438,22 +523,6 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
     message = this.substituteVariables(message);
     this.emit("output", message);
-  }
-
-  /**
-   * Substitutes all the variables in the
-   * string.
-   */
-  private substituteVariables(message: string): string {
-    const pattern = /{{[^{]+}}/g;
-    const out = message.replace(pattern, (s) => {
-      /**
-       * Removes the "{{" and "}}"
-       */
-      const varPath = s.slice(2, -2);
-      return this.getVariableValue(varPath);
-    });
-    return out;
   }
 
   /**
