@@ -34,7 +34,7 @@ export class FreefallError extends ChatbotError {
 export class FunctionNotFoundError extends ChatbotError {
   constructor(fnName: string, page: string | null, index: number) {
     super(page, index);
-    this.name = "FunctionNotFound";
+    this.name = "FunctionNotFoundError";
     this.message = `The function '${fnName}' does not exist at ${page}[${index}]`;
   }
 }
