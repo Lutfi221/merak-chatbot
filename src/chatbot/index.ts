@@ -18,6 +18,26 @@ export type Api = {
   body?: any;
 };
 
+export interface ExecuteAttribute {
+  /**
+   * The function's name
+   */
+  function: string;
+  /**
+   * The function's arguments.
+   *
+   * Variables will be substituted as usual.
+   * You can disable this with the
+   * "substituteVariablesInArgs" property.
+   */
+  args?: any[];
+  /**
+   * Substitute the variables in "args".
+   * Defaults to false.
+   */
+  substituteVariables?: boolean;
+}
+
 /**
  * Basic step
  */
@@ -83,6 +103,12 @@ export interface Step extends BaseStep {
    * Will set the key's name to value.
    */
   value?: Value;
+  /**
+   * Execute a function and put its return value
+   * to the variable specified in the "name"
+   * attribute.
+   */
+  execute?: ExecuteAttribute;
 }
 
 export type Settings = {

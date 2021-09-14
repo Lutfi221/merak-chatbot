@@ -76,6 +76,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   storage: Storage = {};
   status = Status.Uninitialized;
   readonly options: Required<Options>;
+  private nameToFunction: { [name: string]: (...args: any[]) => any } = {};
 
   inputs: string[] = [];
   outputs: string[] = [];
@@ -310,6 +311,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     return this.getStep(this.head.page, this.head.index);
   }
 
+  registerFunction(name: string, fn: (...args: any[]) => any) {
+    this.nameToFunction[name] = fn;
+  }
+
   /**
    * Substitutes all the variables in an object or string
    * without mutating the original object.
@@ -439,6 +444,15 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         this.storage[step.name!] = data;
       }
 
+      if (step.execute) {
+        let args = step.execute.args || [];
+        if (step.execute.substituteVariables) {
+          args = this.substituteVariables(args);
+        }
+        let output = await this.execute(step.execute.function, args);
+        this.storage[step.name!] = output;
+      }
+
       this.emitOutput();
 
       if (needsInput) {
@@ -498,6 +512,23 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.navigate(undefined, this.head.index + 1);
   }
 
+  private async execute(name: string, args: any[]): Promise<any> {
+    let output: any;
+    if (!(name in this.nameToFunction)) {
+      this.emit(
+        "error",
+        new errors.FunctionNotFoundError(name, this.head.page, this.head.index),
+      );
+      return;
+    }
+    try {
+      output = await this.nameToFunction[name](...args);
+      return output;
+    } catch (err) {
+      this.emit("error", err as Error);
+    }
+  }
+
   /**
    * Sets status and emit "status-change" event
    * if the status is different.
@@ -550,6 +581,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
   private stepNeedsInput(step: Step): boolean {
     if (step.api) return false;
+    if (step.execute) return false;
     return (
       typeof step.name !== "undefined" ||
       typeof step.links !== "undefined" ||
