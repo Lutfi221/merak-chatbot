@@ -1,5 +1,5 @@
 import Chatbot, { Status } from "../Chatbot";
-import { Data } from "../index";
+import { Data, Step } from "../index";
 import { FreefallError } from "../errors";
 
 const base: Data = {
@@ -82,9 +82,14 @@ test("navigation", (done) => {
 it("should detect freefall", () => {
   const steps = [];
   for (var i = 0; i < 40; ++i) {
-    steps.push({
+    const step: Step = {
       content: `falls-through ${i}`,
-    });
+    };
+    if (i % 10 === 0) {
+      step.name = "number";
+      step.value = 123;
+    }
+    steps.push(step);
   }
 
   const data = { pages: { "/start": steps } };

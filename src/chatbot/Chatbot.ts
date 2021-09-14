@@ -456,12 +456,12 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.emitOutput();
 
       if (needsInput) {
-        this.stepsSinceLastInput = 0;
         if (typeof step.value !== "undefined") {
           this.storage[step.name!] = step.value;
           this.next();
           continue;
         }
+        this.stepsSinceLastInput = 0;
         this.setStatus(Status.WaitingInput);
         this.running = false;
         return;
