@@ -99,7 +99,6 @@ export interface Step extends BaseStep {
    */
   values?: { [key: string]: Value };
   /**
-   * Simulates a user's input.
    * Will set the key's name to value.
    */
   value?: Value;
@@ -114,6 +113,11 @@ export interface Step extends BaseStep {
    * input doesn't match any of the 'links'.
    */
   defaultLink?: Link;
+  /*
+   * Simulates a user's input.
+   * Variables will be substituted.
+   */
+  simulateInput?: string;
   /**
    * Execute a function and put its return value
    * to the variable specified in the "name"

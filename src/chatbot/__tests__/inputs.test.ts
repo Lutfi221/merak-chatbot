@@ -210,6 +210,79 @@ const inputLinksOverlaps: Data = {
   },
 };
 
+const simulatedInputs: Data = {
+  pages: {
+    "/start": [
+      {
+        name: "name",
+        userInput: true,
+        clearVariables: true,
+      },
+      {
+        name: "height",
+        simulateInput: "{{name}}",
+        values: {
+          Marco: "tall",
+          Polo: "short",
+        },
+        defaultValue: "unknown",
+      },
+      {
+        content: "{{name}}'s height is {{height}}",
+      },
+      {
+        simulateInput: "{{name}}",
+        links: {
+          Marco: "/marco",
+          Polo: "/polo",
+        },
+        defaultLink: "/start[4]",
+      },
+      {
+        content: "Who are you {{name}}?",
+      },
+    ],
+    "/marco": {
+      content: "Marco's page",
+    },
+    "/polo": {
+      content: "Polo's page",
+    },
+  },
+};
+
+it("should handle simulated inputs", async () => {
+  const chatbot = new Chatbot(simulatedInputs, {
+    outputRecordingEnabled: true,
+    inputRecordingEnabled: true,
+  });
+  chatbot.initialize();
+
+  /**
+   * Marco
+   */
+  await chatbot.input("Marco");
+  expect(chatbot.outputs).toEqual(["Marco's height is tall", "Marco's page"]);
+  expect(chatbot.inputs).toEqual(["Marco"]);
+  chatbot.outputs = [];
+
+  /**
+   * Polo
+   */
+  await chatbot.input("Polo");
+  expect(chatbot.outputs).toEqual(["Polo's height is short", "Polo's page"]);
+  chatbot.outputs = [];
+
+  /**
+   * Greg
+   */
+  await chatbot.input("Greg");
+  expect(chatbot.outputs).toEqual([
+    "Greg's height is unknown",
+    "Who are you Greg?",
+  ]);
+});
+
 test("inputs overlaps", () => {
   const chatbot = new Chatbot(inputLinksOverlaps);
   const outputs: string[] = [];

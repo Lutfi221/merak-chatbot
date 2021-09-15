@@ -122,16 +122,19 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   /**
    * Inputs user submitted text.
    *
-   * @param      input  User input
+   * @param      input   User input
+   * @param      silent  If true, the input will not be recorded.
+   * @param      forced  Forcefully input if true.
+   *
    *
    * @return     a promise of the next step's text content.
    */
-  async input(input = "") {
-    if (this.options.inputRecordingEnabled) {
+  async input(input = "", silent = false, forced = false) {
+    if (this.options.inputRecordingEnabled && !silent) {
       this.inputs.push(input);
     }
 
-    if (this.status !== Status.WaitingInput) return;
+    if (this.status !== Status.WaitingInput && !forced) return;
     if (!input) return;
 
     this.setStatus(Status.Busy);
@@ -502,6 +505,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           this.storage[step.name!] = step.value;
           this.next();
           continue;
+        }
+        if (step.simulateInput) {
+          this.running = false;
+          this.input(this.substituteVariables(step.simulateInput), true, true);
+          return;
         }
         this.stepsSinceLastInput = 0;
         this.setStatus(Status.WaitingInput);
