@@ -122,12 +122,12 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   /**
    * Inputs user submitted text.
    *
+   * This method will return when chatbot.status changed
+   * to "WAITING_INPUT".
+   *
    * @param      input   User input
    * @param      silent  If true, the input will not be recorded.
    * @param      forced  Forcefully input if true.
-   *
-   *
-   * @return     a promise of the next step's text content.
    */
   async input(input = "", silent = false, forced = false) {
     if (this.options.inputRecordingEnabled && !silent) {
@@ -142,7 +142,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     if (this.head.page === null) {
       if (!this.hasTriggers) {
         this.navigate("/start");
-        this.run();
+        await this.run();
         return;
       }
 
@@ -158,7 +158,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       for (let trigger in this.data.triggers!) {
         if (compare(trigger, input)) {
           this.navigate(this.data.triggers[trigger]);
-          this.run();
+          await this.run();
           return;
         }
       }
@@ -219,7 +219,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
      */
     if (link) {
       this.navigate(link);
-      this.run();
+      await this.run();
       return;
     }
 
@@ -237,7 +237,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (!pattern.test(input)) {
         if (defaultValueDefined) {
           this.next();
-          this.run();
+          await this.run();
           return;
         }
         this.emitOutput(step.invalidInputMessage);
@@ -255,7 +255,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           ),
         );
         this.next();
-        this.run();
+        await this.run();
         return;
       }
 
@@ -268,18 +268,18 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     if (!step.userInput && !inputMatchedWithValues) {
       if (defaultValueDefined) {
         this.next();
-        this.run();
+        await this.run();
         return;
       }
       /**
        * Resend the last step's message.
        */
-      this.run();
+      await this.run();
       return;
     }
 
     this.next();
-    this.run();
+    await this.run();
   }
 
   /**
