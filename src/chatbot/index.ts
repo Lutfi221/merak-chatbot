@@ -69,6 +69,11 @@ export interface Step extends BaseStep {
    */
   api?: string | Api;
   /**
+   * The link to go to if the api
+   * request was unsuccessful.
+   */
+  apiFailLink?: Link;
+  /**
    * Deletes all variables.
    */
   clearVariables?: boolean;

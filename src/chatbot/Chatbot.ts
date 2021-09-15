@@ -444,6 +444,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (step.api) {
         let api: Api;
         let res: Response;
+        let data: any;
+        const handleApiFail = (err: Error) => {
+          this.emit("error", err);
+          if (step.apiFailLink) {
+            this.navigate(step.apiFailLink);
+          }
+        };
 
         if (typeof step.api === "string") {
           api = { url: step.api, method: "GET" };
@@ -471,7 +478,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
               body: body,
             });
           } catch (err) {
-            //TODO: handle api error
+            handleApiFail(err as Error);
+            continue;
           }
         } else {
           try {
@@ -481,11 +489,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
             }
             res = await fetch(url);
           } catch (err) {
-            //TODO: handle api error
+            handleApiFail(err as Error);
+            continue;
           }
         }
 
-        const data = await res!.json();
+        try {
+          data = await res!.json();
+        } catch (err) {
+          handleApiFail(err as Error);
+          continue;
+        }
         this.storage[step.name!] = data;
       }
 
