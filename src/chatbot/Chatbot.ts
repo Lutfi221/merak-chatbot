@@ -163,8 +163,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
 
     const step = this.getCurrentStep();
+    const defaultValueDefined = typeof step.defaultValue !== "undefined";
     let inputMatchedWithValues = false;
     let link: Link = "";
+
+    if (defaultValueDefined) {
+      this.storage[step.name!] = step.defaultValue;
+    }
 
     if (step.links) {
       /**
@@ -223,6 +228,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
 
       if (!pattern.test(input)) {
+        if (defaultValueDefined) {
+          this.next();
+          this.run();
+          return;
+        }
         this.emitOutput(step.invalidInputMessage);
         this.setStatus(Status.WaitingInput);
         return;
@@ -249,6 +259,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
      * If the user's input doesn't matched anything
      */
     if (!step.userInput && !inputMatchedWithValues) {
+      if (defaultValueDefined) {
+        this.next();
+        this.run();
+        return;
+      }
       /**
        * Resend the last step's message.
        */

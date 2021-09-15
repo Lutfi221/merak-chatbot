@@ -104,6 +104,12 @@ export interface Step extends BaseStep {
    */
   value?: Value;
   /**
+   * This value will be used when the user
+   * inputs an invalid value, so the prompt
+   * will not repeat.
+   */
+  defaultValue?: Value;
+  /**
    * Execute a function and put its return value
    * to the variable specified in the "name"
    * attribute.
