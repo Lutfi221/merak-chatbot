@@ -1,6 +1,6 @@
 import Chatbot, { Status } from "../Chatbot";
 import { Data, Step } from "../index";
-import { FreefallError } from "../errors";
+import { FreefallError, StatusError } from "../errors";
 
 const base: Data = {
   pages: {
@@ -77,6 +77,49 @@ test("navigation", (done) => {
   });
 
   chatbot.input("/err");
+});
+
+const navigateAndRunData: Data = {
+  pages: {
+    "/start": {
+      name: "_",
+      content: "waiting input",
+      userInput: true,
+    },
+    "/run": [
+      {
+        content: "1",
+      },
+      {
+        content: "2",
+      },
+      {
+        name: "_",
+        content: "stop",
+        userInput: true,
+      },
+    ],
+  },
+};
+
+test("navigateAndRun", (done) => {
+  const chatbot = new Chatbot(navigateAndRunData, {
+    outputRecordingEnabled: true,
+  });
+  chatbot.initialize();
+  chatbot.navigateAndRun("/run");
+  expect(chatbot.outputs).toEqual(["waiting input", "1", "2", "stop"]);
+
+  chatbot.once("error", (error) => {
+    expect(error).toBeInstanceOf(StatusError);
+  });
+
+  chatbot.once("status-change", () => {
+    expect(() => chatbot.navigateAndRun("/start")).toThrowError(StatusError);
+    done();
+  });
+
+  chatbot.input("get busy");
 });
 
 it("should detect freefall", () => {

@@ -262,6 +262,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
   /**
    * Update "head" to the link and index
+   * @deprecated This method will be privatized in the next major update. Use
+   *             'navigateAndRun' instead.
    *
    * @param      link   Link
    * @param      index  Step index
@@ -299,6 +301,27 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.head.stepsAmount = (this.data.pages[page] as Step[]).length;
     }
     this.head.index = index;
+  }
+
+  /**
+   * Navigate to link and run.
+   *
+   * @param      link   The link
+   * @param      index  The step index
+   */
+  navigateAndRun(link?: Link | null, index = 0) {
+    if (this.status === Status.Busy) {
+      const error = new errors.StatusError(
+        `The chatbot's status is currently 'BUSY'.\n` +
+          `'navigateAndRun' cannot be called when the chatbot's status is 'BUSY'.`,
+        Status.Busy,
+      );
+      this.emit("error", error);
+      throw error;
+    }
+    this.navigate(link, index);
+    this.setStatus(Status.Busy);
+    this.run();
   }
 
   /**
