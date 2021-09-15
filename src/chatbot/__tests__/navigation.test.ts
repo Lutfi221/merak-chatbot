@@ -1,6 +1,6 @@
 import Chatbot, { Status } from "../Chatbot";
-import { Data } from "../index";
-import { FreefallError } from "../errors";
+import { Data, Step } from "../index";
+import { FreefallError, StatusError } from "../errors";
 
 const base: Data = {
   pages: {
@@ -79,12 +79,94 @@ test("navigation", (done) => {
   chatbot.input("/err");
 });
 
+const defaultLinkData: Data = {
+  pages: {
+    "/start": [
+      {
+        content: "start",
+        links: {
+          "1": "/1",
+        },
+        defaultLink: "/default",
+      },
+      {
+        content: "This page should not be reached.",
+      },
+    ],
+    "/1": {
+      content: "1",
+    },
+    "/default": {
+      content: "default",
+    },
+  },
+};
+
+test("defaultLink", () => {
+  const chatbot = new Chatbot(defaultLinkData, {
+    outputRecordingEnabled: true,
+  });
+  chatbot.initialize();
+
+  chatbot.input("1");
+  chatbot.input("non-matching input");
+  expect(chatbot.outputs).toEqual(["start", "1", "start", "default", "start"]);
+});
+
+const navigateAndRunData: Data = {
+  pages: {
+    "/start": {
+      name: "_",
+      content: "waiting input",
+      userInput: true,
+    },
+    "/run": [
+      {
+        content: "1",
+      },
+      {
+        content: "2",
+      },
+      {
+        name: "_",
+        content: "stop",
+        userInput: true,
+      },
+    ],
+  },
+};
+
+test("navigateAndRun", (done) => {
+  const chatbot = new Chatbot(navigateAndRunData, {
+    outputRecordingEnabled: true,
+  });
+  chatbot.initialize();
+  chatbot.navigateAndRun("/run");
+  expect(chatbot.outputs).toEqual(["waiting input", "1", "2", "stop"]);
+
+  chatbot.once("error", (error) => {
+    expect(error).toBeInstanceOf(StatusError);
+  });
+
+  chatbot.once("status-change", () => {
+    expect(() => chatbot.navigateAndRun("/start")).toThrowError(StatusError);
+    done();
+  });
+
+  chatbot.input("get busy");
+});
+
 it("should detect freefall", () => {
   const steps = [];
   for (var i = 0; i < 40; ++i) {
-    steps.push({
+    const step: Step = {
       content: `falls-through ${i}`,
-    });
+    };
+    if (i % 10 === 0) {
+      step.name = "number";
+      step.value = 123;
+    }
+    steps.push(step);
   }
 
   const data = { pages: { "/start": steps } };

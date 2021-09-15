@@ -154,3 +154,85 @@ it("should send POST request", (done) => {
   chatbot.initialize();
   chatbot.input("a");
 });
+
+it("should handle failed requests", async () => {
+  fetchMock.mockReset();
+  // @ts-ignore
+  fetchMock.mockRejectedValue(new Error("api error"));
+
+  const data: Data = {
+    pages: {
+      "/start": {
+        content: "start",
+        links: {
+          "/simple-get": "/simple-get",
+          "/get": "/get",
+          "/post": "/post",
+        },
+      },
+      "/simple-get": [
+        { content: "simple-get" },
+        {
+          content: "this text should not be outputted",
+          name: "api",
+          api: "http://127.0.0.1/fail",
+          apiFailLink: "/failed",
+        },
+      ],
+      "/get": [
+        { content: "get" },
+        {
+          content: "this text should not be outputted",
+          name: "api",
+          api: {
+            url: "http://127.0.0.1/fail",
+          },
+          apiFailLink: "/failed",
+        },
+      ],
+      "/post": [
+        { content: "post" },
+        {
+          content: "this text should not be outputted",
+          name: "api",
+          api: {
+            method: "POST",
+            url: "http://127.0.0.1/fail",
+          },
+          apiFailLink: "/failed",
+        },
+      ],
+      "/failed": {
+        content: "fail",
+      },
+    },
+  };
+  const chatbot = new Chatbot(data, { outputRecordingEnabled: true });
+  const errors: Error[] = [];
+  chatbot.on("error", (error) => {
+    errors.push(error);
+  });
+  chatbot.initialize();
+
+  await chatbot.input("/simple-get");
+  await chatbot.input("/get");
+  await chatbot.input("/post");
+
+  expect(chatbot.outputs).toEqual([
+    "start",
+    "simple-get",
+    "fail",
+
+    "start",
+    "get",
+    "fail",
+
+    "start",
+    "post",
+    "fail",
+
+    "start",
+  ]);
+
+  expect(errors.length).toBe(3);
+});

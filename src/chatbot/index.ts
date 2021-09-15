@@ -69,6 +69,11 @@ export interface Step extends BaseStep {
    */
   api?: string | Api;
   /**
+   * The link to go to if the api
+   * request was unsuccessful.
+   */
+  apiFailLink?: Link;
+  /**
    * Deletes all variables.
    */
   clearVariables?: boolean;
@@ -99,10 +104,25 @@ export interface Step extends BaseStep {
    */
   values?: { [key: string]: Value };
   /**
-   * Simulates a user's input.
    * Will set the key's name to value.
    */
   value?: Value;
+  /**
+   * This value will be used when the user
+   * inputs an invalid value, so the prompt
+   * will not repeat.
+   */
+  defaultValue?: Value;
+  /**
+   * This link will be used when the user's
+   * input doesn't match any of the 'links'.
+   */
+  defaultLink?: Link;
+  /*
+   * Simulates a user's input.
+   * Variables will be substituted.
+   */
+  simulateInput?: string;
   /**
    * Execute a function and put its return value
    * to the variable specified in the "name"

@@ -1,3 +1,5 @@
+import { Status } from "./Chatbot";
+
 export class ChatbotError extends Error {
   page: string;
   index: number;
@@ -34,7 +36,15 @@ export class FreefallError extends ChatbotError {
 export class FunctionNotFoundError extends ChatbotError {
   constructor(fnName: string, page: string | null, index: number) {
     super(page, index);
-    this.name = "FunctionNotFound";
+    this.name = "FunctionNotFoundError";
     this.message = `The function '${fnName}' does not exist at ${page}[${index}]`;
+  }
+}
+
+export class StatusError extends Error {
+  status: Status;
+  constructor(message: string, status: Status) {
+    super(message);
+    this.status = status;
   }
 }

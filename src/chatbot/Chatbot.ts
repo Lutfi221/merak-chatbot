@@ -122,16 +122,19 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   /**
    * Inputs user submitted text.
    *
-   * @param      input  User input
+   * This method will return when chatbot.status changed
+   * to "WAITING_INPUT".
    *
-   * @return     a promise of the next step's text content.
+   * @param      input   User input
+   * @param      silent  If true, the input will not be recorded.
+   * @param      forced  Forcefully input if true.
    */
-  async input(input = "") {
-    if (this.options.inputRecordingEnabled) {
+  async input(input = "", silent = false, forced = false) {
+    if (this.options.inputRecordingEnabled && !silent) {
       this.inputs.push(input);
     }
 
-    if (this.status !== Status.WaitingInput) return;
+    if (this.status !== Status.WaitingInput && !forced) return;
     if (!input) return;
 
     this.setStatus(Status.Busy);
@@ -139,7 +142,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     if (this.head.page === null) {
       if (!this.hasTriggers) {
         this.navigate("/start");
-        this.run();
+        await this.run();
         return;
       }
 
@@ -155,7 +158,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       for (let trigger in this.data.triggers!) {
         if (compare(trigger, input)) {
           this.navigate(this.data.triggers[trigger]);
-          this.run();
+          await this.run();
           return;
         }
       }
@@ -163,8 +166,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
 
     const step = this.getCurrentStep();
+    const defaultValueDefined = typeof step.defaultValue !== "undefined";
     let inputMatchedWithValues = false;
     let link: Link = "";
+
+    if (defaultValueDefined) {
+      this.storage[step.name!] = step.defaultValue;
+    }
+
+    if (step.defaultLink) {
+      link = step.defaultLink;
+    }
 
     if (step.links) {
       /**
@@ -207,7 +219,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
      */
     if (link) {
       this.navigate(link);
-      this.run();
+      await this.run();
       return;
     }
 
@@ -223,6 +235,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
 
       if (!pattern.test(input)) {
+        if (defaultValueDefined) {
+          this.next();
+          await this.run();
+          return;
+        }
         this.emitOutput(step.invalidInputMessage);
         this.setStatus(Status.WaitingInput);
         return;
@@ -238,7 +255,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           ),
         );
         this.next();
-        this.run();
+        await this.run();
         return;
       }
 
@@ -249,19 +266,26 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
      * If the user's input doesn't matched anything
      */
     if (!step.userInput && !inputMatchedWithValues) {
+      if (defaultValueDefined) {
+        this.next();
+        await this.run();
+        return;
+      }
       /**
        * Resend the last step's message.
        */
-      this.run();
+      await this.run();
       return;
     }
 
     this.next();
-    this.run();
+    await this.run();
   }
 
   /**
    * Update "head" to the link and index
+   * @deprecated This method will be privatized in the next major update. Use
+   *             'navigateAndRun' instead.
    *
    * @param      link   Link
    * @param      index  Step index
@@ -299,6 +323,27 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.head.stepsAmount = (this.data.pages[page] as Step[]).length;
     }
     this.head.index = index;
+  }
+
+  /**
+   * Navigate to link and run.
+   *
+   * @param      link   The link
+   * @param      index  The step index
+   */
+  navigateAndRun(link?: Link | null, index = 0) {
+    if (this.status === Status.Busy) {
+      const error = new errors.StatusError(
+        `The chatbot's status is currently 'BUSY'.\n` +
+          `'navigateAndRun' cannot be called when the chatbot's status is 'BUSY'.`,
+        Status.Busy,
+      );
+      this.emit("error", error);
+      throw error;
+    }
+    this.navigate(link, index);
+    this.setStatus(Status.Busy);
+    this.run();
   }
 
   /**
@@ -399,6 +444,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       if (step.api) {
         let api: Api;
         let res: Response;
+        let data: any;
+        const handleApiFail = (err: Error) => {
+          this.emit("error", err);
+          if (step.apiFailLink) {
+            this.navigate(step.apiFailLink);
+          }
+        };
 
         if (typeof step.api === "string") {
           api = { url: step.api, method: "GET" };
@@ -426,7 +478,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
               body: body,
             });
           } catch (err) {
-            //TODO: handle api error
+            handleApiFail(err as Error);
+            continue;
           }
         } else {
           try {
@@ -436,11 +489,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
             }
             res = await fetch(url);
           } catch (err) {
-            //TODO: handle api error
+            handleApiFail(err as Error);
+            continue;
           }
         }
 
-        const data = await res!.json();
+        try {
+          data = await res!.json();
+        } catch (err) {
+          handleApiFail(err as Error);
+          continue;
+        }
         this.storage[step.name!] = data;
       }
 
@@ -456,12 +515,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.emitOutput();
 
       if (needsInput) {
-        this.stepsSinceLastInput = 0;
         if (typeof step.value !== "undefined") {
           this.storage[step.name!] = step.value;
           this.next();
           continue;
         }
+        if (step.simulateInput) {
+          this.running = false;
+          this.input(this.substituteVariables(step.simulateInput), true, true);
+          return;
+        }
+        this.stepsSinceLastInput = 0;
         this.setStatus(Status.WaitingInput);
         this.running = false;
         return;
