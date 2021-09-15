@@ -79,6 +79,40 @@ test("navigation", (done) => {
   chatbot.input("/err");
 });
 
+const defaultLinkData: Data = {
+  pages: {
+    "/start": [
+      {
+        content: "start",
+        links: {
+          "1": "/1",
+        },
+        defaultLink: "/default",
+      },
+      {
+        content: "This page should not be reached.",
+      },
+    ],
+    "/1": {
+      content: "1",
+    },
+    "/default": {
+      content: "default",
+    },
+  },
+};
+
+test("defaultLink", () => {
+  const chatbot = new Chatbot(defaultLinkData, {
+    outputRecordingEnabled: true,
+  });
+  chatbot.initialize();
+
+  chatbot.input("1");
+  chatbot.input("non-matching input");
+  expect(chatbot.outputs).toEqual(["start", "1", "start", "default", "start"]);
+});
+
 const navigateAndRunData: Data = {
   pages: {
     "/start": {

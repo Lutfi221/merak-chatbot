@@ -110,6 +110,11 @@ export interface Step extends BaseStep {
    */
   defaultValue?: Value;
   /**
+   * This link will be used when the user's
+   * input doesn't match any of the 'links'.
+   */
+  defaultLink?: Link;
+  /**
    * Execute a function and put its return value
    * to the variable specified in the "name"
    * attribute.

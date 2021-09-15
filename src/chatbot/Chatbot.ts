@@ -171,6 +171,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.storage[step.name!] = step.defaultValue;
     }
 
+    if (step.defaultLink) {
+      link = step.defaultLink;
+    }
+
     if (step.links) {
       /**
        * Search for matches in "links".
