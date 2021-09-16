@@ -195,19 +195,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
        */
       for (let key in step.values) {
         if (input === key) {
-          if (!step.name) {
-            this.emit(
-              "error",
-              new errors.MissingPropertyError(
-                "name",
-                this.head.page,
-                this.head.index,
-              ),
-            );
-            break;
-          }
-
-          this.storage[step.name] = step.values[key];
+          this.storage[step.name!] = step.values[key];
           inputMatchedWithValues = true;
           break;
         }
@@ -245,21 +233,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         return;
       }
 
-      if (!step.name) {
-        this.emit(
-          "error",
-          new errors.MissingPropertyError(
-            "name",
-            this.head.page,
-            this.head.index,
-          ),
-        );
-        this.next();
-        await this.run();
-        return;
-      }
-
-      this.storage[step.name] = input;
+      this.storage[step.name!] = input;
     }
 
     /**

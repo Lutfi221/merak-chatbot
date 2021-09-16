@@ -210,6 +210,38 @@ const inputLinksOverlaps: Data = {
   },
 };
 
+const noNameInputs: Data = {
+  pages: {
+    "/start": [
+      {
+        content: "0",
+        userInput: true,
+      },
+      {
+        content: "1",
+        values: {
+          "1": 1,
+          "2": 2,
+        },
+      },
+      {
+        content: "2",
+        userInput: true,
+      },
+    ],
+  },
+};
+
+it("should handle inputs with no name", () => {
+  const chatbot = new Chatbot(noNameInputs, { outputRecordingEnabled: true });
+  chatbot.initialize();
+  chatbot.input("hello");
+  chatbot.input("3");
+  chatbot.input("1");
+
+  expect(chatbot.outputs).toEqual(["0", "1", "1", "2"]);
+});
+
 const simulatedInputs: Data = {
   pages: {
     "/start": [
