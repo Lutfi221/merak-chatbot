@@ -167,6 +167,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
     const step = this.getCurrentStep();
     const defaultValueDefined = typeof step.defaultValue !== "undefined";
+    const simulateInputDefined = typeof step.simulateInput !== "undefined";
     let inputMatchedWithValues = false;
     let link: Link = "";
 
@@ -228,6 +229,19 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
           await this.run();
           return;
         }
+        if (simulateInputDefined) {
+          this.emit(
+            "error",
+            new errors.InvalidSimulatedInputError(
+              input,
+              this.head.page,
+              this.head.index,
+            ),
+          );
+          this.next();
+          await this.run();
+          return;
+        }
         this.emitOutput(step.invalidInputMessage);
         this.setStatus(Status.WaitingInput);
         return;
@@ -245,9 +259,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         await this.run();
         return;
       }
-      /**
-       * Resend the last step's message.
-       */
+      if (simulateInputDefined) {
+        this.emit(
+          "error",
+          new errors.InvalidSimulatedInputError(
+            input,
+            this.head.page,
+            this.head.index,
+          ),
+        );
+        this.next();
+      }
       await this.run();
       return;
     }

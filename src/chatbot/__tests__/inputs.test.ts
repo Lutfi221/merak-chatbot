@@ -1,5 +1,6 @@
 import Chatbot from "../Chatbot";
 import { Data } from "../index";
+import { InvalidSimulatedInputError } from "../errors";
 
 const fooBar = { foo: "bar" };
 const barFoo = { bar: "foo" };
@@ -313,6 +314,58 @@ it("should handle simulated inputs", async () => {
     "Greg's height is unknown",
     "Who are you Greg?",
   ]);
+});
+
+const invalidSimulatedInputs: Data = {
+  pages: {
+    "/start": [
+      {
+        name: "number",
+        value: 9,
+      },
+      {
+        content: "1",
+        simulateInput: "invalid input",
+        userInput: true,
+        userInputValidator: "^\\d+$",
+      },
+      {
+        content: "2",
+        simulateInput: "{{number}}",
+        values: {
+          "1": 1,
+          "2": 2,
+        },
+        links: {
+          "1": "/1",
+          "2": "/2",
+        },
+      },
+      {
+        content: "3",
+        userInput: true,
+      },
+    ],
+  },
+};
+
+it("should handle invalid simulated inputs", () => {
+  const chatbot = new Chatbot(invalidSimulatedInputs, {
+    outputRecordingEnabled: true,
+  });
+  const mockErrorHandler = jest.fn((error: Error) => {
+    expect(error).toBeInstanceOf(InvalidSimulatedInputError);
+    expect((error as InvalidSimulatedInputError).page).toBe(chatbot.head.page);
+    expect((error as InvalidSimulatedInputError).index).toBe(
+      chatbot.head.index,
+    );
+  });
+
+  chatbot.on("error", mockErrorHandler);
+  chatbot.initialize();
+
+  expect(chatbot.outputs).toEqual(["1", "2", "3"]);
+  expect(mockErrorHandler.mock.calls.length).toBe(2);
 });
 
 test("inputs overlaps", () => {

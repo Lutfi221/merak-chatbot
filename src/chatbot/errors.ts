@@ -41,6 +41,19 @@ export class FunctionNotFoundError extends ChatbotError {
   }
 }
 
+export class InvalidSimulatedInputError extends ChatbotError {
+  input: string;
+  constructor(input: string, page: string | null, index: number) {
+    super(page, index);
+    this.name = "InvalidSimulatedInputError";
+    this.input = input;
+    this.message =
+      `The simulated input '${input}' at ${page}[${index}] is invalid because ` +
+      `it doesn't match with any 'values', 'links', or 'userInput'.\n` +
+      `Add a 'defaultValue' or 'defaultLink' property to handle invalid inputs.`;
+  }
+}
+
 export class StatusError extends Error {
   status: Status;
   constructor(message: string, status: Status) {
