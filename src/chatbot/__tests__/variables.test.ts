@@ -138,3 +138,27 @@ it("should accept arrays", () => {
     aliases,
   );
 });
+
+test("global variables", () => {
+  const chatbot = new Chatbot(base, { outputRecordingEnabled: true });
+  chatbot.globalStorage = {
+    letter: "z",
+    number: 9,
+    boolean: false,
+    null: null,
+    word: "from global",
+  };
+  chatbot.initialize();
+  chatbot.input("from local");
+  /**
+   * Simulate 'clearVariables'
+   */
+  chatbot.storage = {};
+  chatbot.input("zoink");
+
+  expect(chatbot.outputs).toEqual([
+    "z;9;false;null;from global",
+    "a;2;true;null;from local",
+    "z;9;false;null;zoink",
+  ]);
+});

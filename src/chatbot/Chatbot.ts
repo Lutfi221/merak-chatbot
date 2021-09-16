@@ -74,6 +74,11 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * Stores form values.
    */
   storage: Storage = {};
+  /**
+   * Stores variables that will not get cleared by 'clearVariables',
+   * and can only be overwritten programmatically.
+   */
+  globalStorage: Storage = {};
   status = Status.Uninitialized;
   readonly options: Required<Options>;
   private nameToFunction: { [name: string]: (...args: any[]) => any } = {};
@@ -626,13 +631,19 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * this.getVariableValue("foo.bar");
    * this.getVariableValue("foo.bar.2");
    */
-  private getVariableValue(varPath: string): Value {
+  private getVariableValue(
+    varPath: string,
+    shouldSearchGlobalOnly = false,
+  ): Value {
     const varNames = varPath.split(".");
-    let head = this.storage;
+    let head = shouldSearchGlobalOnly ? this.globalStorage : this.storage;
 
     for (let i = 0; i < varNames.length; ++i) {
       const name = varNames[i];
-      if (typeof head[name] === "undefined") return "";
+      if (typeof head[name] === "undefined") {
+        if (shouldSearchGlobalOnly) return "";
+        return this.getVariableValue(varPath, true);
+      }
       head = head[name];
     }
 
