@@ -149,3 +149,7 @@ export type Data = {
   triggers?: { [trigger: string]: string };
   pages: { [link: string]: Step[] | Step };
 };
+
+export type UnparsedData = Data & {
+  pages: { [link: string]: any };
+};

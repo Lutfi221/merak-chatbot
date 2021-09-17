@@ -1,9 +1,10 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
-import { Data, Link, Step, Value, Api } from "./index";
+import { Data, UnparsedData, Link, Step, Value, Api } from "./index";
 import fetch, { Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import * as errors from "./errors";
+import parseData from "./parse-data";
 
 export type Head = {
   /**
@@ -88,7 +89,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   private stepsSinceLastInput = 0;
   private hasTriggers = true;
   private running;
-  constructor(data: Data, options: Options = {}) {
+  constructor(data: UnparsedData, options: Options = {}) {
     super();
     if (!data.triggers) {
       this.hasTriggers = false;
@@ -98,7 +99,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
     }
 
-    this.data = data;
+    this.data = parseData(data);
     this.options = { ...DEFAULT_OPTIONS, ...options };
     this.running = false;
 
