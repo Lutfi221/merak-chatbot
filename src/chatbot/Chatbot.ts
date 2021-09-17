@@ -1,10 +1,11 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
-import { Data, UnparsedData, Link, Step, Value, Api } from "./index";
+import { Data, UnparsedData, Link, Step, Api } from "./index";
 import fetch, { Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import * as errors from "./errors";
 import parseData from "./parse-data";
+import { subVarPathsInString, subVarPathsInObjectProps } from "../utils";
 
 export type Head = {
   /**
@@ -363,50 +364,32 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   }
 
   /**
+   * @deprecated Use 'subVarPaths' instead
+   */
+  substituteVariables<T>(obj: T): T {
+    return this.subVarPaths(obj);
+  }
+
+  /**
    * Substitutes all the variables in an object or string
    * without mutating the original object.
    *
    * @param      obj   A string, or a JSON-compatible object
    */
-  substituteVariables<T>(obj: T): T {
-    if (typeof obj === "string")
-      return this.substituteVariablesInString(obj) as unknown as T;
-
-    const outputObj = JSON.parse(JSON.stringify(obj));
-    /**
-     * Goes over every properties in the object, and
-     * substitute the variables in every string.
-     */
-    const substitute = (obj: any) => {
-      Object.keys(obj).forEach((key) => {
-        if (typeof obj[key] === "object") {
-          substitute(obj[key]);
-          return;
-        }
-        if (typeof obj[key] === "string") {
-          obj[key] = this.substituteVariablesInString(obj[key]);
-        }
-      });
-    };
-
-    substitute(outputObj);
-    return outputObj;
+  subVarPaths<T>(obj: T): T {
+    return subVarPathsInObjectProps(obj, undefined, (s: string) =>
+      this.subVarPathsInString(s),
+    );
   }
 
   /**
-   * Substitutes all the variables in the
+   * Substitutes all the variable paths in the
    * string.
    */
-  private substituteVariablesInString(s: string): string {
-    const pattern = /{{[^{]+}}/g;
-    const out = s.replace(pattern, (varName) => {
-      /**
-       * Removes the "{{" and "}}"
-       */
-      const varPath = varName.slice(2, -2);
-      return this.getVariableValue(varPath);
-    });
-    return out;
+  private subVarPathsInString(s: string): string {
+    let output = subVarPathsInString(s, this.storage, false);
+    output = subVarPathsInString(output, this.globalStorage);
+    return output;
   }
 
   private getStep(page: string, index = 0): Step {
@@ -620,35 +603,6 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
     message = this.substituteVariables(message);
     this.emit("output", message);
-  }
-
-  /**
-   * Gets the value from path.
-   *
-   * @param      varPath  Variable path
-   *
-   * @example
-   * this.getVariableValue("foo");
-   * this.getVariableValue("foo.bar");
-   * this.getVariableValue("foo.bar.2");
-   */
-  private getVariableValue(
-    varPath: string,
-    shouldSearchGlobalOnly = false,
-  ): Value {
-    const varNames = varPath.split(".");
-    let head = shouldSearchGlobalOnly ? this.globalStorage : this.storage;
-
-    for (let i = 0; i < varNames.length; ++i) {
-      const name = varNames[i];
-      if (typeof head[name] === "undefined") {
-        if (shouldSearchGlobalOnly) return "";
-        return this.getVariableValue(varPath, true);
-      }
-      head = head[name];
-    }
-
-    return head;
   }
 
   private stepNeedsInput(step: Step): boolean {
