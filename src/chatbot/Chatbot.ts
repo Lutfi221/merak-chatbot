@@ -5,7 +5,11 @@ import fetch, { Response } from "node-fetch";
 import { URLSearchParams } from "url";
 import * as errors from "./errors";
 import parseData from "./parse-data";
-import { subVarPathsInString, subVarPathsInObjectProps } from "../utils";
+import {
+  subVarPathsInString,
+  subVarPathsInObjectProps,
+  getVarValueFromPath,
+} from "../utils";
 
 export type Head = {
   /**
@@ -109,6 +113,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         this.outputs.push(msg);
       });
     }
+
+    this.registerDefaultFunctions();
   }
 
   /**
@@ -122,8 +128,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   /**
    * Initializes the chatbot.
    */
-  initialize() {
-    if (this.status === Status.Uninitialized) this.run();
+  async initialize() {
+    if (this.status === Status.Uninitialized) await this.run();
   }
 
   /**
@@ -382,6 +388,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     );
   }
 
+  private getVarValueFromPath(path: string): any {
+    let value = getVarValueFromPath(path, this.storage);
+    if (typeof value === "undefined")
+      return getVarValueFromPath(path, this.globalStorage);
+    return value;
+  }
+
   /**
    * Substitutes all the variable paths in the
    * string.
@@ -613,6 +626,42 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       typeof step.links !== "undefined" ||
       step.userInput ||
       typeof step.values !== "undefined"
+    );
+  }
+
+  private registerDefaultFunctions() {
+    this.registerFunction(
+      "forEach",
+      (pathToArray: string, template: string) => {
+        const array: any[] = this.getVarValueFromPath(pathToArray);
+        let output = "";
+        array.forEach((value, index) => {
+          /**
+           * Substitute all the variables with percentages.
+           *
+           * e.g. %value% %index%
+           */
+          let toBeAdded = subVarPathsInString(
+            template,
+            {
+              value: value,
+              index: index,
+              humanIndex: index + 1,
+            },
+            true,
+            /%[^%]+%/g,
+            1,
+          );
+          /**
+           * Substitute all the regular variables.
+           *
+           * e.g. {{name}} {{value}}
+           */
+          toBeAdded = this.subVarPathsInString(toBeAdded);
+          output += toBeAdded;
+        });
+        return output;
+      },
     );
   }
 }
