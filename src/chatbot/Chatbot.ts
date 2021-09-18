@@ -9,6 +9,7 @@ import {
   subVarPathsInString,
   subVarPathsInObjectProps,
   getVarValueFromPath,
+  escapeStringRegexp,
 } from "../utils";
 
 export type Head = {
@@ -632,8 +633,14 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   private registerDefaultFunctions() {
     this.registerFunction(
       "forEach",
-      (pathToArray: string, template: string) => {
+      (pathToArray: string, template: string, varSymbol = "%") => {
         const array: any[] = this.getVarValueFromPath(pathToArray);
+        const varSymbolEscaped = escapeStringRegexp(varSymbol);
+        const varPattern = new RegExp(
+          `(${varSymbolEscaped})[^${varSymbolEscaped}]+(${varSymbolEscaped})`,
+          "g",
+        );
+
         let output = "";
         array.forEach((value, index) => {
           /**
@@ -649,7 +656,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
               humanIndex: index + 1,
             },
             true,
-            /%[^%]+%/g,
+            varPattern,
             1,
           );
           /**

@@ -33,7 +33,8 @@ test("forEach function", async () => {
             function: "forEach",
             args: [
               "employees",
-              "\n%humanIndex%. {{employees.%index%.name}} age {{employees.%index%.age}} [%index%]",
+              "\n$humanIndex$. {{employees.$index$.name}} age {{employees.$index$.age}} [$index$]",
+              "$",
             ],
           },
         },

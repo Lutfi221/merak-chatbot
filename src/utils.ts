@@ -62,3 +62,6 @@ export const subVarPathsInObjectProps = <T>(
   substitute(outputObj);
   return outputObj;
 };
+
+export const escapeStringRegexp = (s: string) =>
+  s.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
