@@ -10,6 +10,7 @@ import {
   subVarPathsInObjectProps,
   getVarValueFromPath,
   escapeStringRegexp,
+  sleep,
 } from "../utils";
 
 export type Head = {
@@ -440,6 +441,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
       const step = this.getCurrentStep();
       const needsInput = this.stepNeedsInput(step);
+
+      if (step.delay) {
+        await sleep(step.delay * 1000);
+      }
 
       if (step.clearVariables) {
         this.storage = {};

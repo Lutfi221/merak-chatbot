@@ -129,6 +129,11 @@ export interface Step extends BaseStep {
    * attribute.
    */
   execute?: ExecuteAttribute;
+  /**
+   * How many seconds to wait until this step
+   * starts running.
+   */
+  delay?: number;
 }
 
 export type Settings = {

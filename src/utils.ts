@@ -65,3 +65,12 @@ export const subVarPathsInObjectProps = <T>(
 
 export const escapeStringRegexp = (s: string) =>
   s.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
+
+/**
+ * Pause code execution.
+ *
+ * @param      ms    How long (in milliseconds) to sleep.
+ */
+export const sleep = (ms: number) => {
+  return new Promise((res) => setTimeout(res, ms));
+};
