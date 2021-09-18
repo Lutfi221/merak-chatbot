@@ -119,11 +119,16 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   }
 
   /**
-   * Gets the text content from the current
-   * step.
+   * Gets the text content from the current step.
+   *
+   * @param      varSubEnabled  Substitute the variabes in the string if true
+   *
+   * @return     The prompt.
    */
-  getPrompt(): string {
-    return this.getCurrentStep().content || "";
+  getPrompt(varSubEnabled = true): string {
+    const output = this.getCurrentStep().content || "";
+    if (varSubEnabled) return this.subVarPathsInString(output);
+    return output;
   }
 
   /**
@@ -614,8 +619,9 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       const prompt = this.getPrompt();
       if (!prompt) return;
       message = prompt;
+    } else {
+      message = this.substituteVariables(message);
     }
-    message = this.substituteVariables(message);
     this.emit("output", message);
   }
 
