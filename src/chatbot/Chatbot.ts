@@ -538,9 +538,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   }
 
   private registerDefaultFunctions() {
-    this.registerFunction(
-      "forEach",
-      (pathToArray: string, template: string, varSymbol = "%") => {
+    const nameToFunction = {
+      forEach: (pathToArray: string, template: string, varSymbol = "%") => {
         const array: any[] = this.getVarValueFromPath(pathToArray);
         const varSymbolEscaped = escapeStringRegexp(varSymbol);
         const varPattern = new RegExp(
@@ -576,6 +575,10 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         });
         return output;
       },
-    );
+      split: (s: string, splitter = "\n") => s.split(splitter),
+    };
+    for (let name in nameToFunction) {
+      this.registerFunction(name, nameToFunction[name]);
+    }
   }
 }

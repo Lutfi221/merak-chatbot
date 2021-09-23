@@ -59,3 +59,33 @@ test("forEach function", async () => {
       `3. John age 44 [2]`,
   ]);
 });
+
+test("split function", async () => {
+  const data: Data = {
+    pages: {
+      "/start": [
+        {
+          name: "input",
+          value: "the first,second,third",
+        },
+        {
+          name: "list",
+          execute: {
+            function: "split",
+            args: ["{{input}}", ","],
+            substituteVariables: true,
+          },
+        },
+        {
+          content: "{{list.0}}\n{{list.1}}\n{{list.2}}",
+        },
+        {
+          userInput: true,
+        },
+      ],
+    },
+  };
+  const chatbot = new Chatbot(data, { outputRecordingEnabled: true });
+  await chatbot.initialize();
+  expect(chatbot.outputs).toEqual(["the first\nsecond\nthird"]);
+});
