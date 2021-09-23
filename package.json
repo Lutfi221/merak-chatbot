@@ -16,7 +16,8 @@
     "docs": "typedoc ./src/index.ts",
     "prettier": "prettier --write .",
     "prepare": "npm run build",
-    "watch": "nodemon"
+    "watch": "nodemon",
+    "watch:debug": "nodemon --exec node --inspect -r ts-node/register ./src/simulator.ts"
   },
   "keywords": [
     "chat",
