@@ -180,7 +180,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
     const step = this.getCurrentStep();
 
-    const { nextGoTo, valid } = this.processInput(input, step);
+    const { nextGoTo, valid } = await this.processInput(input, step);
 
     if (nextGoTo && valid) {
       this.navigate(nextGoTo);
@@ -220,13 +220,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * @param      input  User input
    * @param      step   The step
    */
-  processInput(
+  async processInput(
     input: string,
     step = this.getCurrentStep(),
-  ): {
+  ): Promise<{
     nextGoTo: Link | undefined;
     valid: boolean;
-  } {
+  }> {
     let shouldContinue = false;
     let nextGoTo: string | undefined;
     let valid = false;
@@ -239,7 +239,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     const setValid = (isValid: boolean) => (valid = isValid);
 
     for (let i = 0; i < this.inputPasses.length; i++) {
-      this.inputPasses[i](input, step, next, this, setGoTo, setValid);
+      await this.inputPasses[i](input, step, next, this, setGoTo, setValid);
       if (!shouldContinue) break;
       shouldContinue = false;
     }

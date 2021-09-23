@@ -17,7 +17,7 @@ const handleInput: StepPass = async (step, next, chatbot, waitInput, goTo) => {
 
   if (step.simulateInput) {
     const input = chatbot.substituteVariables(step.simulateInput);
-    const { nextGoTo, valid } = chatbot.processInput(input, step);
+    const { nextGoTo, valid } = await chatbot.processInput(input, step);
 
     if (nextGoTo) goTo(nextGoTo);
     if (!valid) {
