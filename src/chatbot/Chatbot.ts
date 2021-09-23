@@ -17,6 +17,13 @@ import StepPass, {
   handleExecute,
   handleInput,
 } from "./step-pass";
+import InputPass, {
+  handleHeadNullPage,
+  handleDefaults,
+  handleLinks,
+  handleValues,
+  handleUserInput,
+} from "./input-pass";
 
 export type Head = {
   /**
@@ -99,9 +106,13 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   inputs: string[] = [];
   outputs: string[] = [];
   private stepsSinceLastInput = 0;
+  /**
+   * @deprecate check directly with chatbot.data.triggers instead
+   */
   private hasTriggers = true;
   private running;
   private stepPasses: StepPass[] = [];
+  private inputPasses: InputPass[] = [];
   constructor(data: UnparsedData, options: Options = {}) {
     super();
     if (!data.triggers) {
@@ -123,6 +134,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
 
     this.pushDefaultStepPasses();
+    this.pushDefaultInputPasses();
     this.registerDefaultFunctions();
   }
 
@@ -166,143 +178,54 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
     this.setStatus(Status.Busy);
 
-    if (this.head.page === null) {
-      if (!this.hasTriggers) {
-        this.navigate("/start");
-        await this.run();
-        return;
-      }
-
-      const caseSensitive = this.data.settings?.caseSensitiveTrigger;
-      let compare: (a: string, b: string) => boolean;
-
-      if (caseSensitive) {
-        compare = (a, b) => a === b;
-      } else {
-        compare = (a, b) => a.toLowerCase() === b.toLowerCase();
-      }
-
-      for (let trigger in this.data.triggers!) {
-        if (compare(trigger, input)) {
-          this.navigate(this.data.triggers[trigger]);
-          await this.run();
-          return;
-        }
-      }
-      this.setStatus(Status.WaitingInput);
-    }
-
     const step = this.getCurrentStep();
-    const defaultValueDefined = typeof step.defaultValue !== "undefined";
-    const simulateInputDefined = typeof step.simulateInput !== "undefined";
-    let inputMatchedWithValues = false;
-    let link: Link = "";
+    let shouldContinue = false;
+    let nextGoTo: string | undefined;
+    let valid = false;
 
-    if (defaultValueDefined) {
-      this.storage[step.name!] = step.defaultValue;
+    const next = () => (shouldContinue = true);
+    const setGoTo = (link: Link) => {
+      nextGoTo = link;
+      valid = true;
+    };
+    const setValid = (isValid: boolean) => (valid = isValid);
+
+    for (let i = 0; i < this.inputPasses.length; i++) {
+      this.inputPasses[i](input, step, next, this, setGoTo, setValid);
+      if (!shouldContinue) break;
+      shouldContinue = false;
     }
 
-    if (step.defaultLink) {
-      link = step.defaultLink;
-    }
-
-    if (step.links) {
-      /**
-       * Search for matches in "links".
-       */
-      for (let key in step.links) {
-        if (input === key) {
-          link = step.links[key];
-        }
-      }
-    }
-
-    if (step.values) {
-      /**
-       * Search for matches in "values".
-       */
-      for (let key in step.values) {
-        if (input === key) {
-          this.storage[step.name!] = step.values[key];
-          inputMatchedWithValues = true;
-          break;
-        }
-      }
-    }
-
-    /**
-     * To allow "values" and "links" to overlap.
-     */
-    if (link) {
-      this.navigate(link);
+    if (nextGoTo && valid) {
+      this.navigate(nextGoTo);
       await this.run();
       return;
     }
 
-    if (step.userInput && !inputMatchedWithValues) {
-      let pattern: RegExp;
-
-      if (!step.userInputValidator) {
-        pattern = RegExp("");
-      } else if (typeof step.userInputValidator === "string") {
-        pattern = RegExp(step.userInputValidator);
-      } else {
-        pattern = step.userInputValidator;
-      }
-
-      if (!pattern.test(input)) {
-        if (defaultValueDefined) {
-          this.next();
-          await this.run();
-          return;
-        }
-        if (simulateInputDefined) {
-          this.emit(
-            "error",
-            new errors.InvalidSimulatedInputError(
-              input,
-              this.head.page,
-              this.head.index,
-            ),
-          );
-          this.next();
-          await this.run();
-          return;
-        }
-        this.emitOutput(step.invalidInputMessage);
-        this.setStatus(Status.WaitingInput);
-        return;
-      }
-
-      this.storage[step.name!] = input;
-    }
-
-    /**
-     * If the user's input doesn't matched anything
-     */
-    if (!step.userInput && !inputMatchedWithValues) {
-      if (defaultValueDefined) {
-        this.next();
-        await this.run();
-        return;
-      }
-      if (simulateInputDefined) {
-        this.emit(
-          "error",
-          new errors.InvalidSimulatedInputError(
-            input,
-            this.head.page,
-            this.head.index,
-          ),
-        );
-        this.next();
-      }
+    if (valid) {
+      this.next();
       await this.run();
       return;
     }
 
-    this.next();
-    await this.run();
+    if (typeof step.simulateInput !== "undefined") {
+      const error = new errors.InvalidSimulatedInputError(
+        input,
+        this.head.page,
+        this.head.index,
+      );
+      this.emit("error", error);
+      this.next();
+      await this.run();
+      return;
+    }
+
+    if (step.invalidInputMessage) {
+      this.emitOutput(step.invalidInputMessage);
+    } else {
+      this.emitOutput(step.content);
+    }
+    this.setStatus(Status.WaitingInput);
   }
 
   /**
@@ -601,6 +524,16 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       handleExecute,
       handleContent,
       handleInput,
+    ];
+  }
+
+  private pushDefaultInputPasses() {
+    this.inputPasses = [
+      handleHeadNullPage,
+      handleDefaults,
+      handleLinks,
+      handleValues,
+      handleUserInput,
     ];
   }
 
