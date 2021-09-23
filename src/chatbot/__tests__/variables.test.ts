@@ -31,14 +31,16 @@ const base: Data = {
   },
 };
 
-test("variables formatting", () => {
+test("variables formatting", async () => {
   const chatbot = new Chatbot(base);
   const outputs: string[] = [];
 
-  chatbot.on("output", (msg) => outputs.push(msg));
-  chatbot.initialize();
+  chatbot.on("output", (msg) => {
+    outputs.push(msg);
+  });
+  await chatbot.initialize();
 
-  chatbot.input("hello");
+  await chatbot.input("hello");
 
   expect(outputs).toEqual([";;;;", "a;2;true;null;hello"]);
 });
@@ -139,7 +141,7 @@ it("should accept arrays", () => {
   );
 });
 
-test("global variables", () => {
+test("global variables", async () => {
   const chatbot = new Chatbot(base, { outputRecordingEnabled: true });
   chatbot.globalStorage = {
     letter: "z",
@@ -148,13 +150,13 @@ test("global variables", () => {
     null: null,
     word: "from global",
   };
-  chatbot.initialize();
-  chatbot.input("from local");
+  await chatbot.initialize();
+  await chatbot.input("from local");
   /**
    * Simulate 'clearVariables'
    */
   chatbot.storage = {};
-  chatbot.input("zoink");
+  await chatbot.input("zoink");
 
   expect(chatbot.outputs).toEqual([
     "z;9;false;null;from global",

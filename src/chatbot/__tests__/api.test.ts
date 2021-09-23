@@ -50,8 +50,10 @@ it("should send GET request", (done) => {
     );
     done();
   });
-  chatbot.initialize();
-  chatbot.input("a");
+  (async () => {
+    await chatbot.initialize();
+    await chatbot.input("a");
+  })();
 });
 
 it("should send GET request using api.body and URL encode it", (done) => {
@@ -98,8 +100,10 @@ it("should send GET request using api.body and URL encode it", (done) => {
     );
     done();
   });
-  chatbot.initialize();
-  chatbot.input("a");
+  (async () => {
+    await chatbot.initialize();
+    await chatbot.input("a");
+  })();
 });
 
 it("should send POST request", (done) => {
@@ -151,8 +155,10 @@ it("should send POST request", (done) => {
     });
     done();
   });
-  chatbot.initialize();
-  chatbot.input("a");
+  (async () => {
+    await chatbot.initialize();
+    await chatbot.input("a");
+  })();
 });
 
 it("should handle failed requests", async () => {
@@ -212,7 +218,7 @@ it("should handle failed requests", async () => {
   chatbot.on("error", (error) => {
     errors.push(error);
   });
-  chatbot.initialize();
+  await chatbot.initialize();
 
   await chatbot.input("/simple-get");
   await chatbot.input("/get");

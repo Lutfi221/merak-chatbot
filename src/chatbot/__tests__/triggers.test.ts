@@ -24,7 +24,7 @@ const base: Data = {
   },
 };
 
-test("case-insensitive triggers", () => {
+test("case-insensitive triggers", async () => {
   const data = base;
   const chatbot = new Chatbot(data);
   const outputs: string[] = [];
@@ -37,15 +37,15 @@ test("case-insensitive triggers", () => {
     outputs.push(msg);
   });
 
-  chatbot.input("/hello");
-  chatbot.input("/hi");
-  chatbot.input("/hey");
-  chatbot.input("/hai");
+  await chatbot.input("/hello");
+  await chatbot.input("/hi");
+  await chatbot.input("/hey");
+  await chatbot.input("/hai");
 
-  chatbot.input("/HELLO");
-  chatbot.input("/HI");
-  chatbot.input("/HEY");
-  chatbot.input("/HAI");
+  await chatbot.input("/HELLO");
+  await chatbot.input("/HI");
+  await chatbot.input("/HEY");
+  await chatbot.input("/HAI");
 
   expect(outputs).toEqual([
     "hello",
@@ -59,7 +59,7 @@ test("case-insensitive triggers", () => {
   ]);
 });
 
-test("case-sensitive triggers", () => {
+test("case-sensitive triggers", async () => {
   const data = { ...base };
   data.settings = { caseSensitiveTrigger: true };
 
@@ -72,23 +72,23 @@ test("case-sensitive triggers", () => {
     outputs.push(msg);
   });
 
-  chatbot.input("/hello");
-  chatbot.input("/hi");
+  await chatbot.input("/hello");
+  await chatbot.input("/hi");
   /**
    * The inputs below should not
    * match against the triggers.
    */
-  chatbot.input("/hey");
-  chatbot.input("/hai");
+  await chatbot.input("/hey");
+  await chatbot.input("/hai");
 
-  chatbot.input("/HELLO");
-  chatbot.input("/HI");
-  chatbot.input("/HEY");
+  await chatbot.input("/HELLO");
+  await chatbot.input("/HI");
+  await chatbot.input("/HEY");
   /**
    * The inputs below should match.
    */
-  chatbot.input("/HAI");
-  chatbot.input("/Hey");
+  await chatbot.input("/HAI");
+  await chatbot.input("/Hey");
 
   expect(outputs).toEqual(["hello", "hi", "hai", "hey"]);
 });

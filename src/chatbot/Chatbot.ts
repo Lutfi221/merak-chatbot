@@ -1,8 +1,6 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
-import { Data, UnparsedData, Link, Step, Api } from "./index";
-import fetch, { Response } from "node-fetch";
-import { URLSearchParams } from "url";
+import { Data, UnparsedData, Link, Step } from "./index";
 import * as errors from "./errors";
 import parseData from "./parse-data";
 import {
@@ -10,8 +8,15 @@ import {
   subVarPathsInObjectProps,
   getVarValueFromPath,
   escapeStringRegexp,
-  sleep,
 } from "../utils";
+import StepPass, {
+  handleApi,
+  handleClearVariables,
+  handleContent,
+  handleDelay,
+  handleExecute,
+  handleInput,
+} from "./step-pass";
 
 export type Head = {
   /**
@@ -96,6 +101,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
   private stepsSinceLastInput = 0;
   private hasTriggers = true;
   private running;
+  private stepPasses: StepPass[] = [];
   constructor(data: UnparsedData, options: Options = {}) {
     super();
     if (!data.triggers) {
@@ -116,6 +122,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       });
     }
 
+    this.pushDefaultStepPasses();
     this.registerDefaultFunctions();
   }
 
@@ -347,7 +354,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * @param      link   The link
    * @param      index  The step index
    */
-  navigateAndRun(link?: Link | null, index = 0) {
+  async navigateAndRun(link?: Link | null, index = 0) {
     if (this.status === Status.Busy) {
       const error = new errors.StatusError(
         `The chatbot's status is currently 'BUSY'.\n` +
@@ -359,7 +366,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     }
     this.navigate(link, index);
     this.setStatus(Status.Busy);
-    this.run();
+    await this.run();
   }
 
   /**
@@ -440,103 +447,36 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       }
 
       const step = this.getCurrentStep();
-      const needsInput = this.stepNeedsInput(step);
+      let shouldContinue = false;
+      let simulatedInput: string | undefined;
+      let nextLink: Link | undefined;
 
-      if (step.delay) {
-        await sleep(step.delay * 1000);
+      const next = () => (shouldContinue = true);
+      const waitInput = () => this.setStatus(Status.WaitingInput);
+      const goTo = (nextLinkToGo: Link) => (nextLink = nextLinkToGo);
+      /**
+       * This is a temporary solution.
+       */
+      const simulateInput = (s: string) => {
+        simulatedInput = s;
+      };
+
+      for (let i = 0; i < this.stepPasses.length; i++) {
+        await this.stepPasses[i](
+          step,
+          next,
+          this,
+          waitInput,
+          goTo,
+          simulateInput,
+        );
+        if (!shouldContinue) break;
+        shouldContinue = false;
       }
 
-      if (step.clearVariables) {
-        this.storage = {};
-      }
-
-      if (step.api) {
-        let api: Api;
-        let res: Response;
-        let data: any;
-        const handleApiFail = (err: Error) => {
-          this.emit("error", err);
-          if (step.apiFailLink) {
-            this.navigate(step.apiFailLink);
-          }
-        };
-
-        if (typeof step.api === "string") {
-          api = { url: step.api, method: "GET" };
-        } else {
-          api = step.api;
-          if (!api.method) api.method = "GET";
-        }
-
-        api = this.substituteVariables(api);
-
-        if (api.method!.toUpperCase() === "POST") {
-          let body: string;
-          if (typeof api.body === "string") {
-            body = api.body;
-          } else {
-            body = JSON.stringify(api.body);
-          }
-          try {
-            res = await fetch(api.url, {
-              method: "POST",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-              body: body,
-            });
-          } catch (err) {
-            handleApiFail(err as Error);
-            continue;
-          }
-        } else {
-          try {
-            let url = api.url;
-            if (api.body) {
-              url = api.url + "?" + new URLSearchParams(api.body).toString();
-            }
-            res = await fetch(url);
-          } catch (err) {
-            handleApiFail(err as Error);
-            continue;
-          }
-        }
-
-        try {
-          data = await res!.json();
-        } catch (err) {
-          handleApiFail(err as Error);
-          continue;
-        }
-        this.storage[step.name!] = data;
-      }
-
-      if (step.execute) {
-        let args = step.execute.args || [];
-        if (step.execute.substituteVariables) {
-          args = this.substituteVariables(args);
-        }
-        let output = await this.execute(step.execute.function, args);
-        this.storage[step.name!] = output;
-      }
-
-      this.emitOutput();
-
-      if (needsInput) {
-        if (typeof step.value !== "undefined") {
-          this.storage[step.name!] = step.value;
-          this.next();
-          continue;
-        }
-        if (step.simulateInput) {
-          this.running = false;
-          this.input(this.substituteVariables(step.simulateInput), true, true);
-          return;
-        }
-        this.stepsSinceLastInput = 0;
-        this.setStatus(Status.WaitingInput);
+      if (typeof simulatedInput !== "undefined") {
         this.running = false;
+        await this.input(simulatedInput, true, true);
         return;
       }
 
@@ -554,9 +494,21 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         this.navigate(null);
         return;
       }
+
       this.stepsSinceLastInput++;
+
+      if (nextLink) {
+        this.navigate(nextLink);
+        continue;
+      }
+      if ((this.status as Status) === Status.WaitingInput) {
+        this.stepsSinceLastInput = 0;
+        break;
+      }
       this.next();
     }
+
+    this.running = false;
   }
 
   /**
@@ -566,7 +518,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * step, then it will update "head" to that
    * location instead.
    */
-  private next() {
+  next() {
     const next = this.getCurrentStep().next;
     if (next) {
       this.navigate(next, 0);
@@ -585,7 +537,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.navigate(undefined, this.head.index + 1);
   }
 
-  private async execute(name: string, args: any[]): Promise<any> {
+  async execute(name: string, args: any[]): Promise<any> {
     let output: any;
     if (!(name in this.nameToFunction)) {
       this.emit(
@@ -630,7 +582,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.emit("output", message);
   }
 
-  private stepNeedsInput(step: Step): boolean {
+  stepNeedsInput(step: Step): boolean {
     if (step.api) return false;
     if (step.execute) return false;
     return (
@@ -639,6 +591,17 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       step.userInput ||
       typeof step.values !== "undefined"
     );
+  }
+
+  private pushDefaultStepPasses() {
+    this.stepPasses = [
+      handleDelay,
+      handleClearVariables,
+      handleApi,
+      handleExecute,
+      handleContent,
+      handleInput,
+    ];
   }
 
   private registerDefaultFunctions() {

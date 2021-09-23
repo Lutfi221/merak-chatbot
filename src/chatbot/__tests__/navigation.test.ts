@@ -42,41 +42,43 @@ const base: Data = {
   },
 };
 
-test("navigation", (done) => {
-  const chatbot = new Chatbot(base);
-  const outputs: string[] = [];
-  chatbot.on("output", (msg) => outputs.push(msg));
-  chatbot.initialize();
+test("navigation", () => {
+  return new Promise<void>(async (res) => {
+    const chatbot = new Chatbot(base);
+    const outputs: string[] = [];
+    chatbot.on("output", (msg) => outputs.push(msg));
+    await chatbot.initialize();
 
-  expect(chatbot.storage.value).toBeUndefined();
+    expect(chatbot.storage.value).toBeUndefined();
 
-  chatbot.input("/1");
-  expect(chatbot.storage.value).toBe(1);
-  chatbot.input("/2");
-  expect(chatbot.storage.value).toBe(2);
-  chatbot.input("/3");
-  expect(chatbot.storage.value).toBe(3);
+    await chatbot.input("/1");
+    expect(chatbot.storage.value).toBe(1);
+    await chatbot.input("/2");
+    expect(chatbot.storage.value).toBe(2);
+    await chatbot.input("/3");
+    expect(chatbot.storage.value).toBe(3);
 
-  expect(outputs).toEqual(["0", "1", "0", "2", "0", "3", "4", "5", "0"]);
+    expect(outputs).toEqual(["0", "1", "0", "2", "0", "3", "4", "5", "0"]);
 
-  chatbot.navigate(null);
-  chatbot.input("foo");
-  expect(chatbot.getPrompt()).toBe("0");
+    chatbot.navigate(null);
+    await chatbot.input("foo");
+    expect(chatbot.getPrompt()).toBe("0");
 
-  /**
-   * To prevent jest from saying unhandled error
-   */
-  chatbot.on("error", (err) => err);
-
-  chatbot.once("error", (err) => {
     /**
      * To prevent jest from saying unhandled error
      */
-    err;
-    done();
-  });
+    chatbot.on("error", (err) => err);
 
-  chatbot.input("/err");
+    chatbot.once("error", (err) => {
+      /**
+       * To prevent jest from saying unhandled error
+       */
+      err;
+      res();
+    });
+
+    await chatbot.input("/err");
+  });
 });
 
 const defaultLinkData: Data = {
@@ -102,14 +104,14 @@ const defaultLinkData: Data = {
   },
 };
 
-test("defaultLink", () => {
+test("defaultLink", async () => {
   const chatbot = new Chatbot(defaultLinkData, {
     outputRecordingEnabled: true,
   });
-  chatbot.initialize();
+  await chatbot.initialize();
 
-  chatbot.input("1");
-  chatbot.input("non-matching input");
+  await chatbot.input("1");
+  await chatbot.input("non-matching input");
   expect(chatbot.outputs).toEqual(["start", "1", "start", "default", "start"]);
 });
 
@@ -136,27 +138,31 @@ const navigateAndRunData: Data = {
   },
 };
 
-test("navigateAndRun", (done) => {
-  const chatbot = new Chatbot(navigateAndRunData, {
-    outputRecordingEnabled: true,
-  });
-  chatbot.initialize();
-  chatbot.navigateAndRun("/run");
-  expect(chatbot.outputs).toEqual(["waiting input", "1", "2", "stop"]);
+test("navigateAndRun", () => {
+  return new Promise<void>(async (res) => {
+    const chatbot = new Chatbot(navigateAndRunData, {
+      outputRecordingEnabled: true,
+    });
+    await chatbot.initialize();
+    await chatbot.navigateAndRun("/run");
+    expect(chatbot.outputs).toEqual(["waiting input", "1", "2", "stop"]);
 
-  chatbot.once("error", (error) => {
-    expect(error).toBeInstanceOf(StatusError);
-  });
+    chatbot.once("error", (error) => {
+      expect(error).toBeInstanceOf(StatusError);
+    });
 
-  chatbot.once("status-change", () => {
-    expect(() => chatbot.navigateAndRun("/start")).toThrowError(StatusError);
-    done();
-  });
+    chatbot.once("status-change", () => {
+      expect(() => chatbot.navigateAndRun("/start")).rejects.toThrowError(
+        StatusError,
+      );
+      res();
+    });
 
-  chatbot.input("get busy");
+    chatbot.input("get busy");
+  });
 });
 
-it("should detect freefall", () => {
+it("should detect freefall", async () => {
   const steps = [];
   for (var i = 0; i < 40; ++i) {
     const step: Step = {
@@ -178,7 +184,7 @@ it("should detect freefall", () => {
   });
 
   chatbot.on("error", mockErrorHandler);
-  chatbot.initialize();
+  await chatbot.initialize();
 
   expect(chatbot.status).toBe(Status.WaitingInput);
   expect(chatbot.head).toMatchObject({

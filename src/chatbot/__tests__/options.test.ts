@@ -24,17 +24,17 @@ const base: Data = {
   },
 };
 
-it("should record inputs and outputs", () => {
+it("should record inputs and outputs", async () => {
   const chatbot = new Chatbot(base, {
     inputRecordingEnabled: true,
     outputRecordingEnabled: true,
   });
-  chatbot.initialize();
+  await chatbot.initialize();
 
-  chatbot.input("/hello");
-  chatbot.input("/hi");
-  chatbot.input("/hey");
-  chatbot.input("/hai");
+  await chatbot.input("/hello");
+  await chatbot.input("/hi");
+  await chatbot.input("/hey");
+  await chatbot.input("/hai");
 
   expect(chatbot.inputs).toEqual(["/hello", "/hi", "/hey", "/hai"]);
   expect(chatbot.outputs).toEqual(["hello", "hi", "hey", "hai"]);

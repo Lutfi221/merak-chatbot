@@ -53,11 +53,14 @@ const choiceInputs: Data = {
   },
 };
 
-test("choice inputs", () => {
+test("choice inputs", async () => {
   const chatbot = new Chatbot(choiceInputs);
-  chatbot.initialize();
+  await chatbot.initialize();
 
-  ["1", "a", "true", "null", "fooBar"].map((s) => chatbot.input(s));
+  let inputs = ["1", "a", "true", "null", "fooBar"];
+  for (let input of inputs) {
+    await chatbot.input(input);
+  }
   expect(chatbot.storage).toMatchObject({
     numberHolder: 1,
     stringHolder: "a",
@@ -66,7 +69,10 @@ test("choice inputs", () => {
     objectHolder: fooBar,
   });
 
-  ["2", "b", "false", "null", "barFoo"].map((s) => chatbot.input(s));
+  inputs = ["2", "b", "false", "null", "barFoo"];
+  for (let input of inputs) {
+    await chatbot.input(input);
+  }
   expect(chatbot.storage).toMatchObject({
     numberHolder: 2,
     stringHolder: "b",
@@ -80,9 +86,10 @@ test("choice inputs", () => {
   /**
    * Try invalid inputs.
    */
-  ["9", "1", "a", "9", "tru", "true", "null", "9", "fooBar"].map((s) =>
-    chatbot.input(s),
-  );
+  inputs = ["9", "1", "a", "9", "tru", "true", "null", "9", "fooBar"];
+  for (let input of inputs) {
+    await chatbot.input(input);
+  }
   expect(chatbot.storage).toMatchObject({
     numberHolder: 1,
     stringHolder: "a",
@@ -119,22 +126,22 @@ const freeUserInputs: Data = {
   },
 };
 
-test("free user inputs", () => {
+test("free user inputs", async () => {
   const chatbot = new Chatbot(freeUserInputs);
   const outputs: string[] = [];
 
   chatbot.on("output", (msg) => outputs.push(msg));
-  chatbot.initialize();
+  await chatbot.initialize();
 
-  chatbot.input("21 ");
-  chatbot.input("ab");
-  chatbot.input("21");
+  await chatbot.input("21 ");
+  await chatbot.input("ab");
+  await chatbot.input("21");
 
-  chatbot.input("12");
-  chatbot.input("ab");
+  await chatbot.input("12");
+  await chatbot.input("ab");
 
-  chatbot.input("cd1");
-  chatbot.input("cd");
+  await chatbot.input("cd1");
+  await chatbot.input("cd");
 
   expect(outputs).toEqual([
     "free numbers",
@@ -233,12 +240,12 @@ const noNameInputs: Data = {
   },
 };
 
-it("should handle inputs with no name", () => {
+it("should handle inputs with no name", async () => {
   const chatbot = new Chatbot(noNameInputs, { outputRecordingEnabled: true });
-  chatbot.initialize();
-  chatbot.input("hello");
-  chatbot.input("3");
-  chatbot.input("1");
+  await chatbot.initialize();
+  await chatbot.input("hello");
+  await chatbot.input("3");
+  await chatbot.input("1");
 
   expect(chatbot.outputs).toEqual(["0", "1", "1", "2"]);
 });
@@ -289,7 +296,7 @@ it("should handle simulated inputs", async () => {
     outputRecordingEnabled: true,
     inputRecordingEnabled: true,
   });
-  chatbot.initialize();
+  await chatbot.initialize();
 
   /**
    * Marco
@@ -349,7 +356,7 @@ const invalidSimulatedInputs: Data = {
   },
 };
 
-it("should handle invalid simulated inputs", () => {
+it("should handle invalid simulated inputs", async () => {
   const chatbot = new Chatbot(invalidSimulatedInputs, {
     outputRecordingEnabled: true,
   });
@@ -362,55 +369,55 @@ it("should handle invalid simulated inputs", () => {
   });
 
   chatbot.on("error", mockErrorHandler);
-  chatbot.initialize();
+  await chatbot.initialize();
 
   expect(chatbot.outputs).toEqual(["1", "2", "3"]);
   expect(mockErrorHandler.mock.calls.length).toBe(2);
 });
 
-test("inputs overlaps", () => {
+test("inputs overlaps", async () => {
   const chatbot = new Chatbot(inputLinksOverlaps);
   const outputs: string[] = [];
 
   chatbot.on("output", (msg) => outputs.push(msg));
-  chatbot.initialize();
+  await chatbot.initialize();
 
-  chatbot.input("a");
+  await chatbot.input("a");
   expect(chatbot.storage.initialChoice).toBe("a");
 
-  chatbot.input("b");
+  await chatbot.input("b");
   expect(chatbot.storage.initialChoice).toBe("b");
 
-  chatbot.input("z");
+  await chatbot.input("z");
 
-  chatbot.input("a");
+  await chatbot.input("a");
   expect(chatbot.storage.number).toBe("1");
 
   chatbot.navigate("/b", 1);
-  chatbot.input("b");
+  await chatbot.input("b");
   expect(chatbot.storage.number).toBe("2");
 
   chatbot.navigate("/b", 1);
-  chatbot.input("c");
+  await chatbot.input("c");
   expect(chatbot.storage.number).toBe("3");
 
   chatbot.navigate("/b", 1);
-  chatbot.input("221");
+  await chatbot.input("221");
   expect(chatbot.storage.number).toBe("221");
 
-  chatbot.input("a");
+  await chatbot.input("a");
   expect(chatbot.storage.letter).toBe("a");
 
   chatbot.navigate("/b", 2);
-  chatbot.input("b");
+  await chatbot.input("b");
   expect(chatbot.storage.letter).toBe("b");
 
   chatbot.navigate("/b", 2);
-  chatbot.input("x");
+  await chatbot.input("x");
   expect(chatbot.storage.letter).toBe("x");
 
   chatbot.navigate("/b", 2);
-  chatbot.input("c");
+  await chatbot.input("c");
   expect(chatbot.storage.letter).toBe("c");
 
   expect(outputs).toEqual([
@@ -465,17 +472,17 @@ const defaultValues: Data = {
   },
 };
 
-it("should handle defaultValue", () => {
+it("should handle defaultValue", async () => {
   const chatbot = new Chatbot(defaultValues, { outputRecordingEnabled: true });
-  chatbot.initialize();
-  chatbot.input("yes");
-  chatbot.input("no");
-  chatbot.input("don't know");
+  await chatbot.initialize();
+  await chatbot.input("yes");
+  await chatbot.input("no");
+  await chatbot.input("don't know");
 
-  chatbot.navigateAndRun("/name");
-  chatbot.input("The Rock");
-  chatbot.input("John Cena");
-  chatbot.input("invalid-name123");
+  await chatbot.navigateAndRun("/name");
+  await chatbot.input("The Rock");
+  await chatbot.input("John Cena");
+  await chatbot.input("invalid-name123");
 
   expect(chatbot.outputs).toEqual([
     "Are you big?",

@@ -58,7 +58,7 @@ const main = async () => {
     }
   }
 
-  const chatbot = new Chatbot(data!);
+  const chatbot = new Chatbot(data!, { outputRecordingEnabled: true });
 
   if (data!.triggers) printTriggers(data!.triggers);
 
