@@ -179,22 +179,8 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     this.setStatus(Status.Busy);
 
     const step = this.getCurrentStep();
-    let shouldContinue = false;
-    let nextGoTo: string | undefined;
-    let valid = false;
 
-    const next = () => (shouldContinue = true);
-    const setGoTo = (link: Link) => {
-      nextGoTo = link;
-      valid = true;
-    };
-    const setValid = (isValid: boolean) => (valid = isValid);
-
-    for (let i = 0; i < this.inputPasses.length; i++) {
-      this.inputPasses[i](input, step, next, this, setGoTo, setValid);
-      if (!shouldContinue) break;
-      shouldContinue = false;
-    }
+    const { nextGoTo, valid } = this.processInput(input, step);
 
     if (nextGoTo && valid) {
       this.navigate(nextGoTo);
@@ -226,6 +212,39 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.emitOutput(step.content);
     }
     this.setStatus(Status.WaitingInput);
+  }
+
+  /**
+   * Process input without navigating the page.
+   *
+   * @param      input  User input
+   * @param      step   The step
+   */
+  processInput(
+    input: string,
+    step = this.getCurrentStep(),
+  ): {
+    nextGoTo: Link | undefined;
+    valid: boolean;
+  } {
+    let shouldContinue = false;
+    let nextGoTo: string | undefined;
+    let valid = false;
+
+    const next = () => (shouldContinue = true);
+    const setGoTo = (link: Link) => {
+      nextGoTo = link;
+      valid = true;
+    };
+    const setValid = (isValid: boolean) => (valid = isValid);
+
+    for (let i = 0; i < this.inputPasses.length; i++) {
+      this.inputPasses[i](input, step, next, this, setGoTo, setValid);
+      if (!shouldContinue) break;
+      shouldContinue = false;
+    }
+
+    return { nextGoTo, valid };
   }
 
   /**
