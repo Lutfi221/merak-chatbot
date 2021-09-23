@@ -10,10 +10,6 @@ type StepPass = (
   chatbot: Chatbot,
   waitInput: () => void,
   goTo: (nextLink: Link) => void,
-  /**
-   * This is a temporary workaround.
-   */
-  simulateInput: (input: string) => void,
 ) => Promise<void>;
 
 export default StepPass;

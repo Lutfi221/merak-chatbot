@@ -1,13 +1,7 @@
 import StepPass from "./StepPass";
+import { InvalidSimulatedInputError } from "../errors";
 
-const handleInput: StepPass = async (
-  step,
-  next,
-  chatbot,
-  waitInput,
-  _,
-  simulateInput,
-) => {
+const handleInput: StepPass = async (step, next, chatbot, waitInput, goTo) => {
   const needsInput = chatbot.stepNeedsInput(step);
 
   if (!needsInput) {
@@ -22,7 +16,20 @@ const handleInput: StepPass = async (
   }
 
   if (step.simulateInput) {
-    simulateInput(chatbot.substituteVariables(step.simulateInput));
+    const input = chatbot.substituteVariables(step.simulateInput);
+    const { nextGoTo, valid } = chatbot.processInput(input, step);
+
+    if (nextGoTo) goTo(nextGoTo);
+    if (!valid) {
+      const error = new InvalidSimulatedInputError(
+        input,
+        chatbot.head.page,
+        chatbot.head.index,
+      );
+      chatbot.emit("error", error);
+    }
+
+    next();
     return;
   }
 

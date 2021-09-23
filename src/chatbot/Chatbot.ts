@@ -390,36 +390,16 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
 
       const step = this.getCurrentStep();
       let shouldContinue = false;
-      let simulatedInput: string | undefined;
       let nextLink: Link | undefined;
 
       const next = () => (shouldContinue = true);
       const waitInput = () => this.setStatus(Status.WaitingInput);
       const goTo = (nextLinkToGo: Link) => (nextLink = nextLinkToGo);
-      /**
-       * This is a temporary solution.
-       */
-      const simulateInput = (s: string) => {
-        simulatedInput = s;
-      };
 
       for (let i = 0; i < this.stepPasses.length; i++) {
-        await this.stepPasses[i](
-          step,
-          next,
-          this,
-          waitInput,
-          goTo,
-          simulateInput,
-        );
+        await this.stepPasses[i](step, next, this, waitInput, goTo);
         if (!shouldContinue) break;
         shouldContinue = false;
-      }
-
-      if (typeof simulatedInput !== "undefined") {
-        this.running = false;
-        await this.input(simulatedInput, true, true);
-        return;
       }
 
       if (this.stepsSinceLastInput >= this.options.freefallLimit) {
