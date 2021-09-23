@@ -81,6 +81,65 @@ test("navigation", () => {
   });
 });
 
+const varSubsData: Data = {
+  pages: {
+    "/start": [
+      {
+        content: "start",
+        userInput: true,
+        next: "/{{categoryName}}-category",
+      },
+    ],
+    "/food-category": [
+      {
+        content: "food",
+      },
+      {
+        name: "index",
+        value: 2,
+      },
+      {
+        content: "press 1",
+        links: {
+          "1": "/food-isle[{{index}}]",
+        },
+      },
+    ],
+    "/food-isle": [
+      {
+        content: "skipped",
+      },
+      {
+        content: "skipped",
+      },
+      {
+        content: "potato isle",
+      },
+    ],
+  },
+};
+
+test("navigation with variable substitution", async () => {
+  const chatbot = new Chatbot(varSubsData, {
+    outputRecordingEnabled: true,
+  });
+  await chatbot.initialize();
+  chatbot.globalStorage = {
+    categoryName: "food",
+  };
+
+  await chatbot.input("start");
+  await chatbot.input("1");
+
+  expect(chatbot.outputs).toEqual([
+    "start",
+    "food",
+    "press 1",
+    "potato isle",
+    "start",
+  ]);
+});
+
 const defaultLinkData: Data = {
   pages: {
     "/start": [

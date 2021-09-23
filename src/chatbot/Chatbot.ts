@@ -262,6 +262,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
       this.head.stepsAmount = 0;
     }
     if (link) {
+      link = this.subVarPaths(link);
       let page = link;
       /**
        * If the link has a specific index, it will split it to
