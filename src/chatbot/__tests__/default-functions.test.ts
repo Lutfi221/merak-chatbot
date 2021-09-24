@@ -89,3 +89,30 @@ test("split function", async () => {
   await chatbot.initialize();
   expect(chatbot.outputs).toEqual(["the first\nsecond\nthird"]);
 });
+
+test("exit function", async () => {
+  const data: Data = {
+    pages: {
+      "/start": [
+        {
+          content: "exitting...",
+        },
+        {
+          execute: {
+            function: "exit",
+          },
+        },
+        {
+          content: "this shouldn't be outputted",
+          userInput: true,
+        },
+      ],
+    },
+  };
+  const chatbot = new Chatbot(data, { outputRecordingEnabled: true });
+  const onExit = jest.fn();
+  chatbot.on("exit", onExit);
+  await chatbot.initialize();
+  expect(chatbot.outputs).toEqual(["exitting..."]);
+  expect(onExit.mock.calls.length).toBe(1);
+});

@@ -36,61 +36,74 @@ const printTriggers = (triggers: { [trigger: string]: string }) => {
   }
 };
 
-const main = async () => {
-  let data: Data;
-  let dataLoaded = false;
+const main = () => {
+  return new Promise<void>(async (res) => {
+    let data: Data;
+    let dataLoaded = false;
 
-  console.log(
-    "Input chatbot data file path (.json)\n" +
-      "Absolute path or relative.\n\n" +
-      "examples:\n" +
-      '"./samples/country-facts.json"\n' +
-      '"D:\\Projects\\merak-chatbot\\samples\\country-facts.json"',
-  );
+    console.log(
+      "Input chatbot data file path (.json)\n" +
+        "Absolute path or relative.\n\n" +
+        "examples:\n" +
+        '"./samples/country-facts.json"\n' +
+        '"D:\\Projects\\merak-chatbot\\samples\\country-facts.json"',
+    );
 
-  while (!dataLoaded) {
-    try {
-      const path = await ask();
-      data = JSON.parse(fs.readFileSync(path, "utf8")) as Data;
-      dataLoaded = true;
-    } catch (err) {
+    while (!dataLoaded) {
+      try {
+        const path = await ask();
+        data = JSON.parse(fs.readFileSync(path, "utf8")) as Data;
+        dataLoaded = true;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const chatbot = new Chatbot(data!, { outputRecordingEnabled: true });
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: false,
+    });
+    rl.setPrompt(" > ");
+
+    if (data!.triggers) printTriggers(data!.triggers);
+
+    chatbot.on("output", (message) => {
+      console.log("\n" + message + "\n");
+    });
+
+    chatbot.on("status-change", (status) => {
+      if (status === Status.WaitingInput) {
+        rl.prompt(true);
+      }
+    });
+
+    chatbot.on("steps-complete", () => {
+      if (data.triggers) printTriggers(data.triggers);
+    });
+
+    chatbot.on("error", (err) => {
       console.error(err);
-    }
-  }
+    });
 
-  const chatbot = new Chatbot(data!, { outputRecordingEnabled: true });
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false,
+    chatbot.on("exit", () => {
+      console.log("---CHATBOT EXIT---");
+      res();
+    });
+
+    rl.on("line", (input) => {
+      chatbot.input(input);
+    });
+
+    chatbot.initialize();
   });
-  rl.setPrompt(" > ");
-
-  if (data!.triggers) printTriggers(data!.triggers);
-
-  chatbot.on("output", (message) => {
-    console.log("\n" + message + "\n");
-  });
-
-  chatbot.on("status-change", (status) => {
-    if (status === Status.WaitingInput) {
-      rl.prompt(true);
-    }
-  });
-
-  chatbot.on("steps-complete", () => {
-    if (data.triggers) printTriggers(data.triggers);
-  });
-
-  chatbot.on("error", (err) => {
-    console.error(err);
-  });
-
-  rl.on("line", (input) => {
-    chatbot.input(input);
-  });
-
-  chatbot.initialize();
 };
 
-main();
+const loop = async () => {
+  while (true) {
+    await main();
+  }
+};
+
+loop();

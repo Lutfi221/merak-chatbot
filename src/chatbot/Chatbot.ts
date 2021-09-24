@@ -57,6 +57,7 @@ export interface Events {
    */
   "steps-complete": (storage: Storage) => void;
   error: (error: Error) => void;
+  exit: () => void;
 }
 
 export type Options = {
@@ -345,6 +346,14 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
     );
   }
 
+  /**
+   * Removes all listeners and emits an "exit" event.
+   */
+  exit() {
+    this.emit("exit");
+    this.removeAllListeners();
+  }
+
   private getVarValueFromPath(path: string): any {
     let value = getVarValueFromPath(path, this.storage);
     if (typeof value === "undefined")
@@ -576,6 +585,7 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
         return output;
       },
       split: (s: string, splitter = "\n") => s.split(splitter),
+      exit: () => this.exit(),
     };
     for (let name in nameToFunction) {
       this.registerFunction(name, nameToFunction[name]);
