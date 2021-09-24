@@ -59,6 +59,12 @@ const main = async () => {
   }
 
   const chatbot = new Chatbot(data!, { outputRecordingEnabled: true });
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false,
+  });
+  rl.setPrompt(" > ");
 
   if (data!.triggers) printTriggers(data!.triggers);
 
@@ -66,9 +72,10 @@ const main = async () => {
     console.log("\n" + message + "\n");
   });
 
-  chatbot.on("status-change", async (status) => {
-    if (status !== Status.WaitingInput) return;
-    chatbot.input(await ask());
+  chatbot.on("status-change", (status) => {
+    if (status === Status.WaitingInput) {
+      rl.prompt(true);
+    }
   });
 
   chatbot.on("steps-complete", () => {
@@ -77,6 +84,10 @@ const main = async () => {
 
   chatbot.on("error", (err) => {
     console.error(err);
+  });
+
+  rl.on("line", (input) => {
+    chatbot.input(input);
   });
 
   chatbot.initialize();
