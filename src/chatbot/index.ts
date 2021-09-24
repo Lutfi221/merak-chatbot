@@ -144,6 +144,14 @@ export type Settings = {
    * Defaults to false.
    */
   caseSensitiveTrigger?: boolean;
+  /**
+   * How many seconds without activity until the chatbot is considered idle. If
+   * it's 0, or undefined, the chatbot will never be idle.
+   *
+   * When it's idle, it will emit an "idle" event, and goes to "/on-idle" if it
+   * exists.
+   */
+  timeThresholdForIdle?: number;
 };
 
 export type Data = {

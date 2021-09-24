@@ -57,6 +57,7 @@ export interface Events {
    */
   "steps-complete": (storage: Storage) => void;
   error: (error: Error) => void;
+  idle: (prevHead: Head, step: Step) => void;
   exit: () => void;
 }
 
@@ -156,7 +157,46 @@ export default class Chatbot extends (EventEmitter as new () => TypedEmitter<Eve
    * Initializes the chatbot.
    */
   async initialize() {
-    if (this.status === Status.Uninitialized) await this.run();
+    if (this.status !== Status.Uninitialized) return;
+
+    const timeThresholdForIdle = this.data.settings?.timeThresholdForIdle;
+
+    if (timeThresholdForIdle) {
+      /**
+       * To be executed when the chatbot goes idle.
+       */
+      const handleIdle = () => {
+        if (this.head.page === "/on-idle") return;
+        if (this.head.page === null) return;
+
+        this.emit("idle", { ...this.head }, this.getCurrentStep());
+        this.globalStorage = {
+          _continue: `${this.head.page}[${this.head.index}]`,
+        };
+
+        if (this.data.pages["/on-idle"]) this.navigateAndRun("/on-idle");
+      };
+
+      let handleIdleTimeoutId = setTimeout(
+        handleIdle,
+        timeThresholdForIdle * 1000,
+      );
+
+      /**
+       * Reset idle timeout or set a new one.
+       */
+      const resetIdleTimeout = () => {
+        clearTimeout(handleIdleTimeoutId);
+        handleIdleTimeoutId = setTimeout(
+          handleIdle,
+          timeThresholdForIdle * 1000,
+        );
+      };
+
+      this.on("output", resetIdleTimeout);
+    }
+
+    await this.run();
   }
 
   /**
