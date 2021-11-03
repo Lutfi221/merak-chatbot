@@ -45,8 +45,8 @@ const main = () => {
       "Input chatbot data file path (.json)\n" +
         "Absolute path or relative.\n\n" +
         "examples:\n" +
-        '"./samples/country-facts.json"\n' +
-        '"D:\\Projects\\merak-chatbot\\samples\\country-facts.json"',
+        '"./samples/shop.json"\n' +
+        '"D:\\Projects\\merak-chatbot\\samples\\shop.json"',
     );
 
     while (!dataLoaded) {
