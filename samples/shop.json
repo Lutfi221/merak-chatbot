@@ -1,0 +1,50 @@
+{
+  "pages": {
+    "/start": [
+      {
+        "clearVariables": true
+      },
+      {
+        "name": "name",
+        "content": "What is your name?",
+        "userInput": true
+      },
+      {
+        "content": "What do you want to buy?\n\n1. Shirt\n2. Pants",
+        "name": "item",
+        "values": {
+          "1": "shirt",
+          "2": "pants"
+        }
+      },
+      {
+        "content": "How many {{item}} do you want to buy?",
+        "name": "quantity",
+        "userInput": true,
+        "userInputValidator": "^\\d+$"
+      },
+      {
+        "content": "Your name is {{name}}, and you want {{quantity}} {{item}}.\nIs this correct?\n\n1. Yes\n2. No",
+        "links": {
+          "1": "/order_placed",
+          "2": "/start"
+        }
+      }
+    ],
+    "/order_placed": [
+      {
+        "content": "Your order has been placed",
+        "api": {
+          "url": "https://examples.com/order",
+          "method": "GET",
+          "body": {
+            "action": "place_order",
+            "name": "{{name}}",
+            "item": "{{item}}",
+            "quantity": "{{quantity}}"
+          }
+        }
+      }
+    ]
+  }
+}
