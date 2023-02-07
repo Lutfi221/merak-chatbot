@@ -163,6 +163,18 @@ export type Data = {
   pages: { [link: string]: Step[] | Step };
 };
 
+/**
+ * To support extra features to make writing
+ * chat steps easier.
+ */
+export type UnparsedBaseStep = BaseStep & {
+  /**
+   * Text to send to the user.
+   * If it's an array, it will be concatenated.
+   */
+  content: string | string[];
+};
+
 export type UnparsedData = Data & {
   pages: { [link: string]: any };
 };

@@ -37,3 +37,39 @@ test("parse data", () => {
     },
   });
 });
+
+it("should convert step's `content`s with type array to string", () => {
+  const unparsedData: any = {
+    pages: {
+      "/start": {
+        content: "abcd",
+      },
+      "/1": {
+        content: ["1abcd"],
+        "/2": {
+          content: ["2a", "b", "c", "d"],
+          "/3": {
+            content: ["3ab", "cd"],
+          },
+          "/4": {
+            content: "4abcd",
+          },
+        },
+      },
+      "/9": {
+        "/10": [{ content: ["10pqrs", "tuvw"] }, { content: "10xyz" }],
+      },
+    },
+  };
+  expect(parseData(unparsedData)).toMatchObject({
+    pages: {
+      "/start": { content: "abcd" },
+      "/1/2/3": { content: "3abcd" },
+      "/1/2/4": { content: "4abcd" },
+      "/1/2": { content: "2abcd" },
+      "/1": { content: "1abcd" },
+      "/9/10": [{ content: "10pqrstuvw" }, { content: "10xyz" }],
+      "/9": {},
+    },
+  });
+});

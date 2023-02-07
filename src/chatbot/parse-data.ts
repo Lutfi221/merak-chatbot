@@ -1,4 +1,4 @@
-import { UnparsedData, Data } from "./index";
+import { UnparsedData, Data, Step } from "./index";
 
 /**
  * Parse data to be used with Chatbot
@@ -20,6 +20,19 @@ export default (data: UnparsedData): Data => {
   };
 
   flatten("", root);
+
+  // Converts all step's content with type array to a string.
+  for (const pageName in parsed.pages) {
+    const page: Step[] | Step = parsed.pages[pageName];
+
+    if (Array.isArray(page)) {
+      for (const step of page)
+        if (Array.isArray(step.content)) step.content = step.content.join("");
+      continue;
+    }
+
+    if (Array.isArray(page.content)) page.content = page.content.join("");
+  }
 
   return parsed;
 };
