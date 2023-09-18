@@ -2,7 +2,7 @@ import { FlowData } from "../types";
 import Chatbot from "./Chatbot";
 import { Message } from "./types";
 
-test("Basic chatbot test", async () => {
+test("Basic", async () => {
   const data: FlowData = {
     pages: {
       "/start": [
