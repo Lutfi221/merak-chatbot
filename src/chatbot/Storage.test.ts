@@ -20,3 +20,14 @@ test("Basic", () => {
     "The age is {{car.age}}",
   );
 });
+
+test("setValue", () => {
+  const storage = new Storage();
+  storage.setValue("indonesia.jakarta.population", 1000);
+  storage.setValue("indonesia.foods[0]", "Nasi Goreng");
+  storage.setValue("indonesia.foods[1]", "Rendang");
+
+  expect(storage.getValue("indonesia.jakarta.population")).toBe(1000);
+  expect(storage.getValue("indonesia.foods[0]")).toBe("Nasi Goreng");
+  expect(storage.getValue("indonesia.foods[1]")).toBe("Rendang");
+});
