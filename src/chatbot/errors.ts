@@ -1,4 +1,4 @@
-import { Status } from "./Chatbot";
+import { Status } from "./types";
 
 export class ChatbotError extends Error {
   page: string;
