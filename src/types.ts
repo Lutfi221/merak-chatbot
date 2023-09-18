@@ -13,7 +13,7 @@ export type LinkString = string;
 export type Value = any;
 
 export type BaseStep = {
-  message?: Message;
+  msg?: Message;
   links?: { [key: string]: LinkString };
   next?: LinkString;
 };

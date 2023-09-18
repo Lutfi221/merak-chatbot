@@ -3,7 +3,7 @@ import { Link } from "../types";
 
 export const handleMessage: StepHandler = async (handle, next) => {
   const step = handle.step;
-  if (step?.message) handle.print(step.message);
+  if (step?.msg) handle.print(step.msg);
 
   next();
 };

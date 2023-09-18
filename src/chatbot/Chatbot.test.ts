@@ -7,16 +7,16 @@ test("Basic", async () => {
     pages: {
       "/start": [
         {
-          message: "A",
+          msg: "A",
         },
         {
-          message: "B",
+          msg: "B",
           next: "/choice",
         },
       ],
       "/choice": [
         {
-          message: "C",
+          msg: "C",
           links: {
             "1": "/links[0]",
             "2": "/links[1]",
@@ -25,11 +25,11 @@ test("Basic", async () => {
       ],
       "/links": [
         {
-          message: "C1",
+          msg: "C1",
           next: "/choice",
         },
         {
-          message: "C2",
+          msg: "C2",
           next: "/choice",
         },
       ],
