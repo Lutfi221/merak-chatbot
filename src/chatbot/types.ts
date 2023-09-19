@@ -1,5 +1,6 @@
 import { LinkString, Step } from "../types";
 import { Head } from "./Head";
+import Storage from "./Storage";
 
 export type Message =
   | string
@@ -39,8 +40,6 @@ export class Link {
     return new Link(linkString);
   }
 }
-
-export type Storage = { [name: string]: any };
 
 export interface Events {
   input: (message: Message) => void;

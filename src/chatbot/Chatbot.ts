@@ -1,10 +1,16 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
 import { FlowData } from "../types";
-import { Events, Message, Status } from "./types";
+import { Events, Link, Message, Status } from "./types";
 import { Head } from "./Head";
-import Handle, { StepHandler } from "./Handle";
-import { handleLinks, handleMessage, handleNext } from "./step-handlers.ts";
+import Handle, { HandleInputStatus, StepHandler } from "./Handle";
+import {
+  handleInput,
+  handleLinks,
+  handleMessage,
+  handleNext,
+} from "./step-handlers.ts";
+import Storage from "./Storage";
 
 interface IChatbot extends TypedEmitter<Events> {
   initialize: () => Promise<void>;
@@ -18,6 +24,8 @@ class Chatbot
   extends (EventEmitter as new () => TypedEmitter<Events>)
   implements IChatbot
 {
+  storage: Storage;
+
   private status_ = Status.Uninitialized;
   private latestMessage_: Message = "";
   private data: FlowData;
@@ -28,8 +36,9 @@ class Chatbot
   constructor(data: FlowData) {
     super();
     this.data = data;
+    this.storage = new Storage();
     this.head = new Head(this.data);
-    this.stepHandlers = [handleMessage, handleNext, handleLinks];
+    this.stepHandlers = [handleMessage, handleNext, handleInput, handleLinks];
   }
 
   initialize(): Promise<void> {
@@ -80,6 +89,7 @@ class Chatbot
     while (true) {
       const handle = new Handle(
         this.head,
+        this.storage,
         () =>
           new Promise((res) => {
             this.once("input", (msg) => {
@@ -97,7 +107,9 @@ class Chatbot
         if (!shouldContinue) break;
       }
 
-      this.head.navigate(handle.nextLink);
+      if (handle.inputStatus === HandleInputStatus.Rejected)
+        this.emit("output", handle.inputRejectionMsg || "Invalid input.");
+      else this.head.navigate(handle.nextLink || Link.fromLinkString("/start"));
     }
   }
 

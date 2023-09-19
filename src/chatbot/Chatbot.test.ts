@@ -45,3 +45,50 @@ test("Basic", async () => {
 
   expect(outputs).toStrictEqual(["A", "B", "C", "C1", "C", "C2", "C"]);
 });
+
+test("Chatbot inputs", async () => {
+  const chatbot = new Chatbot({
+    pages: {
+      "/start": [
+        {
+          input: {
+            type: "text",
+            name: "user.email",
+            pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+          },
+        },
+        {
+          input: {
+            type: "choice",
+            name: "user.eyeColor",
+            choices: {
+              "1": "Black",
+              "2": "Blue",
+            },
+          },
+        },
+        {
+          input: {
+            type: "set",
+            name: "user.flag",
+            value: false,
+          },
+        },
+      ],
+    },
+  });
+
+  await chatbot.initialize();
+  await chatbot.inputAsync("invalid@emailcom");
+  await chatbot.inputAsync("valid@email.com");
+  await chatbot.inputAsync("99");
+  await chatbot.inputAsync("1");
+
+  expect(chatbot.storage.dictionary).toEqual({
+    user: {
+      email: "valid@email.com",
+      eyeColor: "Black",
+      flag: false,
+    },
+  });
+});

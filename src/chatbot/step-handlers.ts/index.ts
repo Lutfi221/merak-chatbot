@@ -27,3 +27,59 @@ export const handleLinks: StepHandler = async (handle, next) => {
 
   next();
 };
+
+export const handleInput: StepHandler = async (handle, next) => {
+  const step = handle.step;
+
+  if (!step?.input) {
+    next();
+    return;
+  }
+
+  const input = step.input;
+
+  if (input.type === "set") {
+    handle.storage.setValue(input.name, input.value);
+    next();
+    return;
+  }
+
+  const userInput = String(await handle.getInput());
+
+  if (input.type === "choice") {
+    if (userInput in input.choices!) {
+      handle.acceptInput();
+      handle.storage.setValue(input.name, input.choices![userInput]);
+    } else
+      handle.rejectInput(
+        input.rejectMsg || "Invalid choice. Please input a valid choice.",
+      );
+
+    next();
+    return;
+  }
+
+  if (input.type === "text") {
+    if (input.pattern) {
+      let p: RegExp;
+      if (typeof input.pattern === "string") p = RegExp(input.pattern);
+      else p = input.pattern;
+
+      if (!p.test(userInput)) {
+        handle.rejectInput(
+          input.rejectMsg ||
+            "Invalid input. \n" +
+              "The input doesn't match the required pattern.",
+        );
+      } else {
+        handle.acceptInput();
+        handle.storage.setValue(input.name, userInput);
+      }
+    }
+
+    next();
+    return;
+  }
+
+  throw new Error("Unknown input type.");
+};

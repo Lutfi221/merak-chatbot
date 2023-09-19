@@ -18,7 +18,21 @@ export type BaseStep = {
   next?: LinkString;
 };
 
-export type Step = BaseStep;
+export interface InputProperty {
+  type: "text" | "choice" | "set";
+  name: string;
+
+  rejectMsg?: Message;
+
+  pattern?: string | RegExp;
+  choices?: { [key: string]: Value };
+  value?: any;
+  expandValue?: boolean;
+}
+
+export type Step = BaseStep & {
+  input?: InputProperty;
+};
 
 export type FlowData = {
   pages: { [link: string]: Step[] };
