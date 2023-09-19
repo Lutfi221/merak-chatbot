@@ -53,14 +53,14 @@ test("Chatbot inputs", async () => {
         {
           input: {
             type: "text",
-            name: "user.email",
+            var: "user.email",
             pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
           },
         },
         {
           input: {
             type: "choice",
-            name: "user.eyeColor",
+            var: "user.eyeColor",
             choices: {
               "1": "Black",
               "2": "Blue",
@@ -70,7 +70,7 @@ test("Chatbot inputs", async () => {
         {
           input: {
             type: "set",
-            name: "user.flag",
+            var: "user.flag",
             value: false,
           },
         },

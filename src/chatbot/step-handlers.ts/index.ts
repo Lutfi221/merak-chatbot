@@ -39,7 +39,7 @@ export const handleInput: StepHandler = async (handle, next) => {
   const input = step.input;
 
   if (input.type === "set") {
-    handle.storage.setValue(input.name, input.value);
+    handle.storage.setValue(input.var, input.value);
     next();
     return;
   }
@@ -49,7 +49,7 @@ export const handleInput: StepHandler = async (handle, next) => {
   if (input.type === "choice") {
     if (userInput in input.choices!) {
       handle.acceptInput();
-      handle.storage.setValue(input.name, input.choices![userInput]);
+      handle.storage.setValue(input.var, input.choices![userInput]);
     } else
       handle.rejectInput(
         input.rejectMsg || "Invalid choice. Please input a valid choice.",
@@ -73,7 +73,7 @@ export const handleInput: StepHandler = async (handle, next) => {
         );
       } else {
         handle.acceptInput();
-        handle.storage.setValue(input.name, userInput);
+        handle.storage.setValue(input.var, userInput);
       }
     }
 

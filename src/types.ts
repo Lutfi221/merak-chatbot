@@ -20,7 +20,7 @@ export type BaseStep = {
 
 export interface InputProperty {
   type: "text" | "choice" | "set";
-  name: string;
+  var: string;
 
   rejectMsg?: Message;
 
