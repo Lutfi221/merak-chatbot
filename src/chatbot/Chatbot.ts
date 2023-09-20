@@ -1,15 +1,16 @@
 import EventEmitter from "events";
 import TypedEmitter from "../../types/typed-emitter";
 import { FlowData } from "../types";
-import { Events, Link, Message, Status } from "./types";
+import {
+  ChatbotFunctionDictionary,
+  Events,
+  Link,
+  Message,
+  Status,
+} from "./types";
 import { Head } from "./Head";
 import Handle, { HandleInputStatus, StepHandler } from "./Handle";
-import {
-  handleInput,
-  handleLinks,
-  handleMessage,
-  handleNext,
-} from "./step-handlers.ts";
+import { DEFAULT_STEP_HANDLERS } from "./step-handlers.ts";
 import Storage from "./Storage";
 
 interface IChatbot extends TypedEmitter<Events> {
@@ -29,16 +30,18 @@ class Chatbot
   private status_ = Status.Uninitialized;
   private latestMessage_: Message = "";
   private data: FlowData;
+  private functions: ChatbotFunctionDictionary;
 
   private head: Head;
   private stepHandlers: StepHandler[];
 
-  constructor(data: FlowData) {
+  constructor(data: FlowData, functions: ChatbotFunctionDictionary = {}) {
     super();
     this.data = data;
     this.storage = new Storage();
     this.head = new Head(this.data);
-    this.stepHandlers = [handleMessage, handleNext, handleInput, handleLinks];
+    this.stepHandlers = [...DEFAULT_STEP_HANDLERS];
+    this.functions = functions;
   }
 
   initialize(): Promise<void> {
@@ -90,6 +93,7 @@ class Chatbot
       const handle = new Handle(
         this.head,
         this.storage,
+        this.functions,
         () =>
           new Promise((res) => {
             this.once("input", (msg) => {

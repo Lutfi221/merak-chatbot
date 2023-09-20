@@ -92,3 +92,53 @@ test("Chatbot inputs", async () => {
     },
   });
 });
+
+test("Chatbot functions", async () => {
+  const mock = jest.fn();
+
+  const chatbot = new Chatbot(
+    {
+      pages: {
+        "/start": [
+          {
+            execute: {
+              var: "total",
+              fn: "add",
+              args: ["{{a}}", 100, "{{b}}"],
+            },
+          },
+          {
+            execute: {
+              fn: "mock",
+              args: ["{{car}}"],
+            },
+          },
+          {
+            input: {
+              var: "_",
+              type: "text",
+            },
+          },
+        ],
+      },
+    },
+    {
+      add: (...args: number[]) => args.reduce((partial, a) => partial + a, 0),
+      mock: mock,
+    },
+  );
+
+  chatbot.storage.dictionary.a = 1;
+  chatbot.storage.dictionary.b = 2;
+  chatbot.storage.dictionary.car = {
+    brand: "Ford",
+    age: 8,
+  };
+
+  await chatbot.initialize();
+  expect(chatbot.storage.dictionary.total).toBe(103);
+  expect(chatbot.storage.dictionary.car).toEqual({
+    brand: "Ford",
+    age: 8,
+  });
+});

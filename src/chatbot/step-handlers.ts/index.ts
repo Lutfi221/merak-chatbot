@@ -1,6 +1,8 @@
 import { StepHandler } from "../Handle";
 import { Link } from "../types";
 
+import handleExecute from "./handle-execute";
+
 export const handleMessage: StepHandler = async (handle, next) => {
   const step = handle.step;
   if (step?.msg) handle.print(step.msg);
@@ -83,3 +85,11 @@ export const handleInput: StepHandler = async (handle, next) => {
 
   throw new Error("Unknown input type.");
 };
+
+export const DEFAULT_STEP_HANDLERS: StepHandler[] = [
+  handleMessage,
+  handleNext,
+  handleInput,
+  handleLinks,
+  handleExecute,
+];

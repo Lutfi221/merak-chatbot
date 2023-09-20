@@ -1,7 +1,7 @@
 import { Step } from "../types";
 import { Head } from "./Head";
 import Storage from "./Storage";
-import { Link, Message } from "./types";
+import { ChatbotFunctionDictionary, Link, Message } from "./types";
 
 type GetInput = () => Promise<Message>;
 type Print = (msg: Message) => void;
@@ -20,6 +20,8 @@ export default class Handle {
   step: Step | null;
   storage: Storage;
 
+  readonly functions: ChatbotFunctionDictionary;
+
   private input: Message | undefined;
   private promptInput: GetInput;
   private inputStatus_ = HandleInputStatus.None;
@@ -28,12 +30,14 @@ export default class Handle {
   constructor(
     head: Head,
     storage: Storage,
+    functions: ChatbotFunctionDictionary,
     promptInput: GetInput,
     print: Print,
   ) {
     this.nextLink = head.nextLink;
     this.step = head.step;
     this.storage = storage;
+    this.functions = functions;
 
     this.promptInput = promptInput;
     this.print = print;

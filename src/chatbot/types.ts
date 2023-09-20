@@ -51,3 +51,6 @@ export interface Events {
   idle: (prevHead: Head, step: Step) => void;
   exit: () => void;
 }
+
+export type ChatbotFunction = (...args: any) => any;
+export type ChatbotFunctionDictionary = { [name: string]: ChatbotFunction };

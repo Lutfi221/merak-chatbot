@@ -30,8 +30,16 @@ export interface InputProperty {
   expandValue?: boolean;
 }
 
+export interface FunctionProperty {
+  var?: string;
+  fn: string;
+  args?: any[];
+  expandArgs?: boolean;
+}
+
 export type Step = BaseStep & {
   input?: InputProperty;
+  execute?: FunctionProperty;
 };
 
 export type FlowData = {
