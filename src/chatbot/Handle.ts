@@ -1,5 +1,4 @@
 import { Step } from "../types";
-import { Head } from "./Head";
 import Storage from "./Storage";
 import { ChatbotFunctionDictionary, Link, Message } from "./types";
 
@@ -16,7 +15,7 @@ export enum HandleInputStatus {
  * Object that is passed and processed through step handlers.
  */
 export default class Handle {
-  nextLink: Link | null;
+  nextLink: Link | null = null;
   step: Step | null;
   storage: Storage;
 
@@ -28,14 +27,15 @@ export default class Handle {
   private inputRejectionMsg_: Message | undefined;
 
   constructor(
-    head: Head,
+    step: Step | null,
+    nextLink: Link | null,
     storage: Storage,
     functions: ChatbotFunctionDictionary,
     promptInput: GetInput,
     print: Print,
   ) {
-    this.nextLink = head.nextLink;
-    this.step = head.step;
+    this.step = step;
+    this.nextLink = nextLink;
     this.storage = storage;
     this.functions = functions;
 

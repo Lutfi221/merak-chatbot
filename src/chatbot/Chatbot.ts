@@ -14,9 +14,12 @@ import { DEFAULT_STEP_HANDLERS } from "./step-handlers.ts";
 import Storage from "./Storage";
 
 interface IChatbot extends TypedEmitter<Events> {
+  storage: Storage;
+  readonly status: Status;
+  readonly latestMessage: Message;
+  readonly functions: ChatbotFunctionDictionary;
+
   initialize: () => Promise<void>;
-  status: Status;
-  latestMessage: Message;
   input: (msg: Message) => void;
   inputAsync: (msg: Message) => Promise<void>;
 }
@@ -26,11 +29,11 @@ class Chatbot
   implements IChatbot
 {
   storage: Storage;
+  readonly functions: ChatbotFunctionDictionary;
 
   private status_ = Status.Uninitialized;
   private latestMessage_: Message = "";
   private data: FlowData;
-  private functions: ChatbotFunctionDictionary;
 
   private head: Head;
   private stepHandlers: StepHandler[];
@@ -52,13 +55,6 @@ class Chatbot
       this.once("status-change-waiting-input", res);
       this.run();
     });
-  }
-
-  get status() {
-    return this.status_;
-  }
-  get latestMessage() {
-    return this.latestMessage_;
   }
 
   input(msg: Message) {
@@ -85,25 +81,19 @@ class Chatbot
     });
   }
 
+  get status() {
+    return this.status_;
+  }
+  get latestMessage() {
+    return this.latestMessage_;
+  }
+
   private async run() {
     if (this.status_ != Status.Uninitialized) return;
     this.status_ = Status.Busy;
 
     while (true) {
-      const handle = new Handle(
-        this.head,
-        this.storage,
-        this.functions,
-        () =>
-          new Promise((res) => {
-            this.once("input", (msg) => {
-              this.status = Status.Busy;
-              res(msg);
-            });
-            this.status = Status.WaitingInput;
-          }),
-        (msg) => this.emit("output", msg),
-      );
+      const handle = this.createHandle();
 
       for (let i = 0; i < this.stepHandlers.length; i++) {
         let shouldContinue = false;
@@ -115,6 +105,27 @@ class Chatbot
         this.emit("output", handle.inputRejectionMsg || "Invalid input.");
       else this.head.navigate(handle.nextLink || Link.fromLinkString("/start"));
     }
+  }
+
+  /**
+   * Create a `Handle` object for the step pointed by `Chatbot.head`.
+   */
+  private createHandle() {
+    return new Handle(
+      this.head.step,
+      this.head.nextLink,
+      this.storage,
+      this.functions,
+      () =>
+        new Promise((res) => {
+          this.once("input", (msg) => {
+            this.status = Status.Busy;
+            res(msg);
+          });
+          this.status = Status.WaitingInput;
+        }),
+      (msg) => this.emit("output", msg),
+    );
   }
 
   private set status(status: Status) {
