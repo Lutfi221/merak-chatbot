@@ -37,9 +37,20 @@ export interface FunctionProperty {
   expandArgs?: boolean;
 }
 
+export interface RequestProperty {
+  var?: string;
+  url: string;
+  method: "GET" | "POST";
+  body?: any;
+
+  expandUrl?: boolean;
+  expandBody?: boolean;
+}
+
 export type Step = BaseStep & {
   input?: InputProperty;
   execute?: FunctionProperty;
+  request?: RequestProperty;
 };
 
 export type FlowData = {

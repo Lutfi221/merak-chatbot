@@ -28,6 +28,20 @@ export default class Storage {
   }
 
   /**
+   * Expand placeholders within the object.
+   * @param obj Object that contains strings that has variable placeholders.
+   * @returns Deeply cloned object with the placeholders expanded.
+   */
+  expandObject(obj: any): any {
+    return transformDeepPrimitiveValues(obj, (v) => {
+      if (typeof v !== "string") return v;
+      if (Storage.isLonePlaceholder(v))
+        return this.getValueFromLonePlaceholder(v);
+      return this.expandString(v);
+    });
+  }
+
+  /**
    * Gets a value from dictionary.
    * @param valuePath
    * @returns Value or undefined.
@@ -43,6 +57,10 @@ export default class Storage {
     }
 
     return head;
+  }
+
+  getValueFromLonePlaceholder(lonePlaceholder: string): unknown | void {
+    return this.getValue(lonePlaceholder.slice(2, lonePlaceholder.length - 2));
   }
 
   /**
@@ -65,6 +83,13 @@ export default class Storage {
 
     head[components[components.length - 1]] = value;
   }
+
+  /**
+   * @returns True if the string **only** contains a variable placeholder.
+   */
+  static isLonePlaceholder(s: string) {
+    return s.match(Storage.PLACEHOLDER_PATTERN)?.[0].length === s.length;
+  }
 }
 
 const getValuePathComponents = (valuePath: string): (string | number)[] => {
@@ -82,4 +107,29 @@ const getValuePathComponents = (valuePath: string): (string | number)[] => {
   });
 
   return components;
+};
+
+/**
+ * Applies a transform to each low-level (non arrays and non objects) values.
+ * @param obj Object to be transformed.
+ * @param valueTransform Transformation function.
+ * @returns Transformed object.
+ */
+const transformDeepPrimitiveValues = (
+  obj: any,
+  valueTransform: (value: any) => any,
+): any => {
+  if (Array.isArray(obj)) {
+    return obj.map((x) => transformDeepPrimitiveValues(x, valueTransform));
+  }
+
+  if (typeof obj === "object") {
+    const output: any = {};
+    for (let key in obj) {
+      output[key] = transformDeepPrimitiveValues(obj[key], valueTransform);
+    }
+    return output;
+  }
+
+  return valueTransform(obj);
 };

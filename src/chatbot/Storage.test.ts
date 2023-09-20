@@ -31,3 +31,24 @@ test("setValue", () => {
   expect(storage.getValue("indonesia.foods[0]")).toBe("Nasi Goreng");
   expect(storage.getValue("indonesia.foods[1]")).toBe("Rendang");
 });
+
+test("expandObject", () => {
+  const userLutfi = () => ({
+    name: "lutfi221",
+    age: 19,
+    young: true,
+    nicknames: ["Lutfi", "Lut", "Bro"],
+  });
+
+  const storage = new Storage({
+    user: userLutfi(),
+  });
+
+  expect(
+    storage.expandObject({
+      lutfi: "{{user}}",
+      age: "{{user.age}}",
+      nicknames: "{{user.nicknames}}",
+    }),
+  ).toEqual({ lutfi: userLutfi(), age: 19, nicknames: userLutfi().nicknames });
+});
