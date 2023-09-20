@@ -8,10 +8,7 @@ export class Head {
 
   constructor(data: FlowData) {
     this._data = data;
-    this.link = {
-      pageLink: "/start",
-      index: 0,
-    };
+    this.link = new Link("/start", 0);
   }
 
   navigate(target: Link | null) {
@@ -27,6 +24,6 @@ export class Head {
     if (!this.link) return null;
     if (this.link.index >= this._data.pages[this.link.pageLink].length - 1)
       return null;
-    return { pageLink: this.link.pageLink, index: this.link.index + 1 };
+    return new Link(this.link.pageLink, this.link.index + 1);
   }
 }
