@@ -30,6 +30,10 @@ export class Link {
     this.index = index;
   }
 
+  toLinkString(): LinkString {
+    return `${this.pageLink}[${this.index}]`;
+  }
+
   static fromLinkString(linkString: LinkString): Link {
     if (linkString.endsWith("]")) {
       const [pageLink, post] = linkString.split("[");
