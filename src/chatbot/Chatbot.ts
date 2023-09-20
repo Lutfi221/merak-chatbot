@@ -10,7 +10,7 @@ import {
 } from "./types";
 import { Head } from "./Head";
 import Handle, { HandleInputStatus, StepHandler } from "./Handle";
-import { DEFAULT_STEP_HANDLERS } from "./step-handlers.ts";
+import { DEFAULT_STEP_HANDLERS } from "./step-handlers";
 import Storage from "./Storage";
 
 interface IChatbot extends TypedEmitter<Events> {
