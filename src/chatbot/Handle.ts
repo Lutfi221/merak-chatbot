@@ -22,28 +22,28 @@ export default class Handle {
   readonly functions: ChatbotFunctionDictionary;
 
   private input: Message | undefined;
-  private promptInput: GetInput;
   private inputStatus_ = HandleInputStatus.None;
   private inputRejectionMsg_: Message | undefined;
 
   constructor(
-    step: Step | null,
-    nextLink: Link | null,
-    storage: Storage,
-    functions: ChatbotFunctionDictionary,
-    promptInput: GetInput,
-    print: Print,
+    step: Step | null = null,
+    nextLink: Link | null = null,
+    storage: Storage = new Storage(),
+    functions: ChatbotFunctionDictionary = {},
+    promptInput?: GetInput,
+    print?: Print,
   ) {
     this.step = step;
     this.nextLink = nextLink;
     this.storage = storage;
     this.functions = functions;
 
-    this.promptInput = promptInput;
-    this.print = print;
+    if (promptInput) this.promptInput = promptInput;
+    if (print) this.print = print;
   }
 
-  print: Print;
+  print: Print = () => {};
+
   async getInput() {
     if (this.input !== undefined) return this.input;
     this.input = await this.promptInput();
@@ -66,6 +66,10 @@ export default class Handle {
   get inputStatus() {
     return this.inputStatus_;
   }
+
+  private promptInput: GetInput = () => {
+    throw new Error("Handle.promptInput not implemented.");
+  };
 }
 
 export type StepHandler = (handle: Handle, next: () => void) => Promise<void>;
