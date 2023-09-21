@@ -8,12 +8,12 @@ import {
   Message,
   Status,
 } from "./types";
-import { Head } from "./Head";
+import Head from "./Head";
 import Handle, { HandleInputStatus, StepHandler } from "./Handle";
 import { DEFAULT_STEP_HANDLERS } from "./step-handlers";
 import Storage from "./Storage";
 
-interface IChatbot extends TypedEmitter<Events> {
+export interface ChatbotBase extends TypedEmitter<Events> {
   storage: Storage;
   readonly status: Status;
   readonly latestMessage: Message;
@@ -26,7 +26,7 @@ interface IChatbot extends TypedEmitter<Events> {
 
 class Chatbot
   extends (EventEmitter as new () => TypedEmitter<Events>)
-  implements IChatbot
+  implements ChatbotBase
 {
   storage: Storage;
   readonly functions: ChatbotFunctionDictionary;

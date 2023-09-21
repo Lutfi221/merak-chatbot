@@ -1,7 +1,7 @@
 import { FlowData, Step } from "../types";
 import { Link } from "./types";
 
-export class Head {
+export default class Head {
   link: Link | null;
 
   private _data: FlowData;
