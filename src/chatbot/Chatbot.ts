@@ -13,7 +13,13 @@ import Handle, { HandleInputStatus, StepHandler } from "./Handle";
 import { DEFAULT_STEP_HANDLERS } from "./step-handlers";
 import Storage from "./Storage";
 
-export interface ChatbotBase extends TypedEmitter<Events> {
+/**
+ * Event emitter type for Chatbot.
+ * Provides a less cluttered interface.
+ */
+export type ChatbotTypedEmitter<T> = Pick<TypedEmitter<T>, "on" | "once" | "off" | "emit">;
+
+export interface ChatbotBase extends ChatbotTypedEmitter<Events> {
   storage: Storage;
   readonly status: Status;
   readonly latestMessage: Message;
@@ -25,7 +31,7 @@ export interface ChatbotBase extends TypedEmitter<Events> {
 }
 
 class Chatbot
-  extends (EventEmitter as new () => TypedEmitter<Events>)
+  extends (EventEmitter as new () => ChatbotTypedEmitter<Events>)
   implements ChatbotBase
 {
   storage: Storage;
