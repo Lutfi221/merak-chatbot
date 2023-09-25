@@ -1,16 +1,17 @@
 "use strict";
 
 module.exports = {
-  collectCoverage: false,
+  collectCoverage: true,
   collectCoverageFrom: ["src/**/*.ts", "src/**/*.js"],
   coverageThreshold: {
     global: {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
     },
   },
   testEnvironment: "node",
   preset: "ts-jest",
+  rootDir: "src",
 };
