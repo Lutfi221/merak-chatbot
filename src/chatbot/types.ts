@@ -45,7 +45,7 @@ export class Link {
   }
 }
 
-export interface Events {
+export type Events = {
   input: (message: Message) => void;
   output: (message: Message) => void;
   "status-change": (status: Status) => void;
@@ -54,7 +54,7 @@ export interface Events {
   error: (error: Error) => void;
   idle: (prevHead: Head, step: Step) => void;
   exit: () => void;
-}
+};
 
 export type ChatbotFunction = (...args: any) => any;
 export type ChatbotFunctionDictionary = { [name: string]: ChatbotFunction };

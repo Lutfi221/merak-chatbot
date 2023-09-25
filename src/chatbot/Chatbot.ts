@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import TypedEmitter from "../../types/typed-emitter";
+import TypedEmitter, { EventMap } from "typed-emitter";
 import { FlowData } from "../types";
 import {
   ChatbotFunctionDictionary,
@@ -17,7 +17,10 @@ import Storage from "./Storage";
  * Event emitter type for Chatbot.
  * Provides a less cluttered interface.
  */
-export type ChatbotTypedEmitter<T> = Pick<TypedEmitter<T>, "on" | "once" | "off" | "emit">;
+export type ChatbotTypedEmitter<Events extends EventMap> = Pick<
+  TypedEmitter<Events>,
+  "on" | "once" | "off" | "emit"
+>;
 
 export interface ChatbotBase extends ChatbotTypedEmitter<Events> {
   storage: Storage;
