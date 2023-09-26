@@ -1,6 +1,6 @@
 {
   "name": "merak-chatbot",
-  "version": "1.14.0",
+  "version": "2.0.0-alpha.1",
   "description": "Flow-based chat bot",
   "repository": {
     "type": "git",
@@ -44,8 +44,9 @@
     "typescript": "^5.2.2"
   },
   "files": [
-    "/dist",
-    "/types"
+    "/dist/**/*.js",
+    "/dist/**/*.map",
+    "/dist/**/*.ts"
   ],
   "dependencies": {
     "node-fetch": "^2.7.0"
