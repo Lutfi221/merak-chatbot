@@ -27,7 +27,8 @@
       "node_modules/@types"
     ],
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "esModuleInterop": true,
     "preserveConstEnums": true,
@@ -35,10 +36,7 @@
     "incremental": true
   },
   "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "src/**/*.test.*"
+    "src"
   ],
   "references": [
     {
