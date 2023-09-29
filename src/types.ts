@@ -56,3 +56,18 @@ export type Step = BaseStep & {
 export type FlowData = {
   pages: { [link: string]: Step[] };
 };
+
+/**
+ * A JSON compatible object.
+ */
+export type Json = JsonObject | JsonArray;
+
+export type JsonPrimitive = string | number | boolean | Date | null;
+
+export type JsonObject = {
+  [x: string]: JsonPrimitive | Json | JsonArray;
+};
+
+export type JsonArray = Array<
+  string | number | boolean | Date | Json | JsonArray
+>;

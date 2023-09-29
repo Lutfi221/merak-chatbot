@@ -1,11 +1,13 @@
+import { Json, JsonObject, JsonPrimitive } from "../types";
+
 /**
  * Facilitates the storage and retrieval of data.
  */
 export default class Storage {
   static PLACEHOLDER_PATTERN = /{{[[\w\[\]\.]+}}/g;
-  dictionary: any;
+  dictionary: JsonObject;
 
-  constructor(initial: any = {}) {
+  constructor(initial: JsonObject = {}) {
     this.dictionary = initial;
   }
 
@@ -32,7 +34,7 @@ export default class Storage {
    * @param obj Object that contains strings that has variable placeholders.
    * @returns Deeply cloned object with the placeholders expanded.
    */
-  expandObject(obj: any): any {
+  expandObject(obj: Json): Json {
     return transformDeepPrimitiveValues(obj, (v) => {
       if (typeof v !== "string") return v;
       if (Storage.isLonePlaceholder(v))
@@ -46,14 +48,16 @@ export default class Storage {
    * @param valuePath
    * @returns Value or undefined.
    */
-  getValue(valuePath: string): unknown | void {
+  getValue(valuePath: string): Json | JsonPrimitive | void {
     const components = getValuePathComponents(valuePath);
-    let head = this.dictionary;
+    let head: Json | JsonPrimitive = this.dictionary;
 
     for (let i = 0; i < components.length; i++) {
       const component = components[i];
-      if (typeof head[component] === "undefined") return;
-      head = head[component];
+      // @ts-expect-error
+      const x: Json | JsonPrimitive | void = head[component];
+      if (typeof x === "undefined") return;
+      head = x;
     }
 
     return head;
@@ -66,9 +70,9 @@ export default class Storage {
   /**
    * Sets a value in the dictionary.
    */
-  setValue(valuePath: string, value: any) {
+  setValue(valuePath: string, value: Json | JsonPrimitive) {
     const components = getValuePathComponents(valuePath);
-    let head = this.dictionary;
+    let head: any = this.dictionary;
 
     for (let i = 0; i < components.length - 1; i++) {
       const component = components[i];

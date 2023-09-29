@@ -81,6 +81,6 @@ it("should expand placeholder variables", async () => {
     handle.storage.expandString(urlTemplate()),
   );
   expect(mf().mock.calls[0][1]?.body).toBe(
-    handle.storage.expandObject(JSON.stringify(bodyTemplate())),
+    JSON.stringify(handle.storage.expandObject(bodyTemplate())),
   );
 });
