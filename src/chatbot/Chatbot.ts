@@ -1,28 +1,12 @@
-import EventEmitter from "events";
-import TypedEmitter, { EventMap } from "typed-emitter";
 import { FlowData } from "../types";
-import {
-  ChatbotFunctionDictionary,
-  Events,
-  Link,
-  Message,
-  Status,
-} from "./types";
+import { ChatbotFunctionDictionary, Link, Message, Status } from "./types";
 import Head from "./Head";
 import Handle, { HandleInputStatus, StepHandler } from "./Handle";
 import { DEFAULT_STEP_HANDLERS } from "./step-handlers";
 import Storage from "./Storage";
+import ChatbotEventEmitter from "./ChatbotEventEmitter";
 
-/**
- * Event emitter type for Chatbot.
- * Provides a less cluttered interface.
- */
-export type ChatbotTypedEmitter<Events extends EventMap> = Pick<
-  TypedEmitter<Events>,
-  "on" | "once" | "off" | "emit"
->;
-
-export interface ChatbotBase extends ChatbotTypedEmitter<Events> {
+export interface ChatbotBase extends ChatbotEventEmitter {
   storage: Storage;
   readonly status: Status;
   readonly latestMessage: Message;
@@ -33,10 +17,10 @@ export interface ChatbotBase extends ChatbotTypedEmitter<Events> {
   inputAsync: (msg: Message) => Promise<void>;
 }
 
-class Chatbot
-  extends (EventEmitter as new () => ChatbotTypedEmitter<Events>)
-  implements ChatbotBase
-{
+/**
+ * Main chatbot class.
+ */
+class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
   storage: Storage;
   readonly functions: ChatbotFunctionDictionary;
 

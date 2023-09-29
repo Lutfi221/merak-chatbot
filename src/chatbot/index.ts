@@ -11,3 +11,5 @@ export {
   ChatbotFunction,
   ChatbotFunctionDictionary,
 } from "./types";
+
+export { default as ChatbotEventEmitter } from "./ChatbotEventEmitter";
