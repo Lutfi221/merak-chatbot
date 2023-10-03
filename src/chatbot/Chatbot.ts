@@ -28,8 +28,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
   private latestMessage_: Message = "";
   private data: FlowData;
 
-  private head: Head;
-  private stepHandlers: StepHandler[];
+  protected head: Head;
+  protected stepHandlers: StepHandler[];
 
   constructor(data: FlowData, functions: ChatbotFunctionDictionary = {}) {
     super();
@@ -86,28 +86,30 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
     this.status_ = Status.Busy;
 
     while (true) {
-      const handle = this.createHandle();
-
-      for (let i = 0; i < this.stepHandlers.length; i++) {
-        let shouldContinue = false;
-        await this.stepHandlers[i](handle, () => (shouldContinue = true));
-        if (!shouldContinue) break;
-      }
-
-      if (handle.inputStatus === HandleInputStatus.Rejected)
-        this.emit("output", handle.inputRejectionMsg || "Invalid input.");
-      else this.head.navigate(handle.nextLink || Link.fromLinkString("/start"));
+      await this.step();
     }
   }
 
+  protected async step() {
+    const handle = this.createHandle();
+
+    for (let i = 0; i < this.stepHandlers.length; i++) {
+      let shouldContinue = false;
+      await this.stepHandlers[i](handle, () => (shouldContinue = true));
+      if (!shouldContinue) break;
+    }
+
+    await this.applyHandle(handle);
+  }
+
   /**
-   * Create a `Handle` object for the step pointed by `Chatbot.head`.
+   * Create a `Handle` object.
    */
-  private createHandle() {
+  protected createHandle(head = this.head, storage = this.storage) {
     return new Handle(
-      this.head.step,
-      this.head.nextLink,
-      this.storage,
+      head.step,
+      head.nextLink,
+      storage,
       this.functions,
       () =>
         new Promise((res) => {
@@ -119,6 +121,15 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
         }),
       (msg) => this.emit("output", msg),
     );
+  }
+
+  /**
+   * Applies the handle to the chatbot, updating the chatbot's state.
+   */
+  protected async applyHandle(handle: Handle) {
+    if (handle.inputStatus === HandleInputStatus.Rejected)
+      this.emit("output", handle.inputRejectionMsg || "Invalid input.");
+    else this.head.navigate(handle.nextLink || Link.fromLinkString("/start"));
   }
 
   private set status(status: Status) {

@@ -49,6 +49,7 @@
     "/dist/**/*.ts"
   ],
   "dependencies": {
+    "immer": "^10.0.2",
     "node-fetch": "^2.7.0"
   }
 }

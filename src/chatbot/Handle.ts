@@ -16,19 +16,19 @@ export enum HandleInputStatus {
  */
 export default class Handle {
   nextLink: Link | null = null;
-  step: Step | null;
-  storage: Storage;
 
+  readonly step: Step | null;
   readonly functions: ChatbotFunctionDictionary;
 
   private input: Message | undefined;
   private inputStatus_ = HandleInputStatus.None;
   private inputRejectionMsg_: Message | undefined;
+  storage: Storage;
 
   constructor(
     step: Step | null = null,
     nextLink: Link | null = null,
-    storage: Storage = new Storage(),
+    storage = new Storage(),
     functions: ChatbotFunctionDictionary = {},
     promptInput?: GetInput,
     print?: Print,

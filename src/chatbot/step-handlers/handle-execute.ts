@@ -1,6 +1,5 @@
 import { FunctionProperty } from "../../types";
 import { StepHandler } from "../Handle";
-import Storage from "../Storage";
 
 const handleExecute: StepHandler = async (handle, next) => {
   const step = handle.step;
@@ -18,7 +17,7 @@ const handleExecute: StepHandler = async (handle, next) => {
       if (
         sx.expandArgs &&
         typeof arg === "string" &&
-        Storage.isLonePlaceholder(arg)
+        handle.storage.isLonePlaceholder(arg)
       ) {
         const value = handle.storage.getValueFromLonePlaceholder(arg);
         finalArgs.push(value);

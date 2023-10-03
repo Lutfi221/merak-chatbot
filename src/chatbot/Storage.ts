@@ -4,11 +4,18 @@ import { Json, JsonObject, JsonPrimitive } from "../types";
  * Facilitates the storage and retrieval of data.
  */
 export default class Storage {
-  static PLACEHOLDER_PATTERN = /{{[[\w\[\]\.]+}}/g;
-  dictionary: JsonObject;
+  private PLACEHOLDER_PATTERN = /{{[[\w\[\]\.]+}}/g;
+  protected dictionary_: JsonObject;
 
   constructor(initial: JsonObject = {}) {
-    this.dictionary = initial;
+    this.dictionary_ = initial;
+  }
+
+  get dictionary() {
+    return this.dictionary_;
+  }
+  set dictionary(value: JsonObject) {
+    this.dictionary_ = value;
   }
 
   /**
@@ -17,7 +24,7 @@ export default class Storage {
    * @returns Expanded string.
    */
   expandString(s: string) {
-    return s.replace(Storage.PLACEHOLDER_PATTERN, (valuePath) => {
+    return s.replace(this.PLACEHOLDER_PATTERN, (valuePath) => {
       // Removes the `{{` and `}}`
       valuePath = valuePath.slice(2, -2);
 
@@ -37,8 +44,7 @@ export default class Storage {
   expandObject(obj: Json): Json {
     return transformDeepPrimitiveValues(obj, (v) => {
       if (typeof v !== "string") return v;
-      if (Storage.isLonePlaceholder(v))
-        return this.getValueFromLonePlaceholder(v);
+      if (this.isLonePlaceholder(v)) return this.getValueFromLonePlaceholder(v);
       return this.expandString(v);
     });
   }
@@ -91,8 +97,8 @@ export default class Storage {
   /**
    * @returns True if the string **only** contains a variable placeholder.
    */
-  static isLonePlaceholder(s: string) {
-    return s.match(Storage.PLACEHOLDER_PATTERN)?.[0].length === s.length;
+  isLonePlaceholder(s: string) {
+    return s.match(this.PLACEHOLDER_PATTERN)?.[0].length === s.length;
   }
 }
 
