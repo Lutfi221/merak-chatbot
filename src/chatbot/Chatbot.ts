@@ -12,7 +12,7 @@ export interface ChatbotBase extends ChatbotEventEmitter {
   readonly latestMessage: Message;
   readonly functions: ChatbotFunctionDictionary;
 
-  initialize: () => Promise<void>;
+  start: () => Promise<void>;
   input: (msg: Message) => void;
   inputAsync: (msg: Message) => Promise<void>;
 }
@@ -24,7 +24,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
   storage: Storage;
   readonly functions: ChatbotFunctionDictionary;
 
-  private status_ = Status.Uninitialized;
+  private status_ = Status.Paused;
+  private shouldStop = false;
   private latestMessage_: Message = "";
   private data: FlowData;
 
@@ -40,18 +41,58 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
     this.functions = functions;
   }
 
-  initialize(): Promise<void> {
-    if (this.status_ != Status.Uninitialized)
-      throw new Error("Cannot initialize chatbot that is already initialized.");
+  /**
+   * Start the chatbot from a paused state.
+   *
+   * @returns A promise that resolves when
+   *          the chatbot is paused or is waiting input.
+   */
+  start(): Promise<void> {
+    if (this.status === Status.Busy)
+      throw new Error("Cannot start chatbot that is already running.");
+    if (this.status === Status.WaitingInput)
+      throw new Error("Cannot start chatbot that is waiting for input.");
 
     return new Promise((res) => {
-      this.once("status-change-waiting-input", res);
+      this.onUntilFalse("status-change", (status) => {
+        if (status !== Status.Busy) {
+          res();
+          return false;
+        }
+        return true;
+      });
+
       this.run();
     });
   }
 
+  /**
+   * Sends a pause signal to the chatbot.
+   * It will pause after the current step is completed.
+   * This method is typically used during testing.
+   *
+   * If the chatbot's status is waiting for input,
+   * it will not pause immediately. Instead, it will pause
+   * after the chatbot received an input,
+   * and the current step is completed.
+   *
+   * @returns A promise that resolves when the chatbot is paused.
+   */
+  pause(): Promise<void> {
+    this.shouldStop = true;
+    return new Promise((res) => {
+      this.onUntilFalse("status-change", (status) => {
+        if (status === Status.Paused) {
+          res();
+          return false;
+        }
+        return true;
+      });
+    });
+  }
+
   input(msg: Message) {
-    if (this.status_ != Status.WaitingInput) {
+    if (this.status != Status.WaitingInput) {
       console.warn(
         `Attempting to input while Chatbot is not waiting for input.\n` +
           `This should be avoided as the input will be ignored.`,
@@ -61,7 +102,7 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
   }
 
   inputAsync(msg: Message): Promise<void> {
-    if (this.status_ != Status.WaitingInput) {
+    if (this.status != Status.WaitingInput) {
       throw new Error(
         "Chatbot.inputAsync() can only be called when the " +
           "chatbot's status is waiting for input.",
@@ -82,12 +123,16 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
   }
 
   private async run() {
-    if (this.status_ != Status.Uninitialized) return;
-    this.status_ = Status.Busy;
+    if (this.status != Status.Paused) return;
+    this.status = Status.Busy;
 
-    while (true) {
+    while (!this.shouldStop) {
       await this.step();
     }
+
+    this.status = Status.Paused;
+    // Reset stop flag.
+    this.shouldStop = false;
   }
 
   protected async step() {
@@ -98,6 +143,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
       await this.stepHandlers[i](handle, () => (shouldContinue = true));
       if (!shouldContinue) break;
     }
+
+    this.emit("step-complete", this.head.step!);
 
     await this.applyHandle(handle);
   }

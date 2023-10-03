@@ -9,7 +9,7 @@ export type Message =
     };
 
 export enum Status {
-  Uninitialized,
+  Paused,
   WaitingInput,
   Busy,
 }
@@ -51,6 +51,7 @@ export type Events = {
   "status-change": (status: Status) => void;
   "status-change-waiting-input": () => void;
   "page-complete": (storage: Storage) => void;
+  "step-complete": (step: Step) => void;
   error: (error: Error) => void;
   idle: (prevHead: Head, step: Step) => void;
   exit: () => void;

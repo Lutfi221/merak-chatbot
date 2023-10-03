@@ -50,7 +50,7 @@ test("Basic", async () => {
     const outputs: Message[] = [];
     chatbot.on("output", (msg) => outputs.push(msg));
 
-    await chatbot.initialize();
+    await chatbot.start();
     await chatbot.inputAsync("1");
     await chatbot.inputAsync("2");
 
@@ -93,7 +93,7 @@ test("Chatbot inputs", async () => {
   await doubleC(async (C) => {
     const chatbot = new C(data);
 
-    await chatbot.initialize();
+    await chatbot.start();
     await chatbot.inputAsync("invalid@emailcom");
     await chatbot.inputAsync("valid@email.com");
     await chatbot.inputAsync("99");
@@ -150,7 +150,7 @@ test("Chatbot functions", async () => {
       age: 8,
     };
 
-    await chatbot.initialize();
+    await chatbot.start();
     expect(chatbot.storage.dictionary.total).toBe(103);
     expect(chatbot.storage.dictionary.car).toEqual({
       brand: "Ford",
