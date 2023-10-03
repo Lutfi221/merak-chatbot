@@ -5,6 +5,7 @@ import Handle, { HandleInputStatus, StepHandler } from "./Handle";
 import { DEFAULT_STEP_HANDLERS } from "./step-handlers";
 import Storage from "./Storage";
 import ChatbotEventEmitter from "./ChatbotEventEmitter";
+import { InputAbortionException } from "./errors";
 
 export interface ChatbotBase extends ChatbotEventEmitter {
   storage: Storage;
@@ -79,6 +80,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
    * @returns A promise that resolves when the chatbot is paused.
    */
   pause(): Promise<void> {
+    if (this.status === Status.Paused) return Promise.resolve();
+
     this.shouldStop = true;
     return new Promise((res) => {
       this.onUntilFalse("status-change", (status) => {
@@ -88,6 +91,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
         }
         return true;
       });
+
+      if (this.status === Status.WaitingInput) this.emit("input-abort");
     });
   }
 
@@ -123,11 +128,17 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
   }
 
   private async run() {
-    if (this.status != Status.Paused) return;
+    if (this.status !== Status.Paused) return;
     this.status = Status.Busy;
 
     while (!this.shouldStop) {
-      await this.step();
+      try {
+        await this.step();
+      } catch (e) {
+        if (e instanceof InputAbortionException) {
+          // do nothing
+        } else throw e;
+      }
     }
 
     this.status = Status.Paused;
@@ -144,9 +155,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
       if (!shouldContinue) break;
     }
 
-    this.emit("step-complete", this.head.step!);
-
     await this.applyHandle(handle);
+    this.emit("step-complete", this.head.step!);
   }
 
   /**
@@ -159,11 +169,22 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
       storage,
       this.functions,
       () =>
-        new Promise((res) => {
-          this.once("input", (msg) => {
-            this.status = Status.Busy;
+        new Promise((res, rej) => {
+          const handleInput = (msg: Message) => {
+            cleanup();
             res(msg);
-          });
+          };
+          const handleInputAbort = () => {
+            cleanup();
+            rej(new InputAbortionException(this.head.link!));
+          };
+          const cleanup = () => {
+            this.off("input", handleInput);
+            this.off("input-abort", handleInputAbort);
+          };
+
+          this.once("input", handleInput);
+          this.once("input-abort", handleInputAbort);
           this.status = Status.WaitingInput;
         }),
       (msg) => this.emit("output", msg),

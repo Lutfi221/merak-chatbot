@@ -11,42 +11,42 @@ const doubleC = async (testCallback: (C: typeof Chatbot) => Promise<void>) => {
   await testCallback(ChatbotDebugger);
 };
 
-test("Basic", async () => {
-  const data: FlowData = {
-    pages: {
-      "/start": [
-        {
-          msg: "A",
+const basicFlowData: FlowData = {
+  pages: {
+    "/start": [
+      {
+        msg: "A",
+      },
+      {
+        msg: "B",
+        next: "/choice",
+      },
+    ],
+    "/choice": [
+      {
+        msg: "C",
+        links: {
+          "1": "/links[0]",
+          "2": "/links[1]",
         },
-        {
-          msg: "B",
-          next: "/choice",
-        },
-      ],
-      "/choice": [
-        {
-          msg: "C",
-          links: {
-            "1": "/links[0]",
-            "2": "/links[1]",
-          },
-        },
-      ],
-      "/links": [
-        {
-          msg: "C1",
-          next: "/choice",
-        },
-        {
-          msg: "C2",
-          next: "/choice",
-        },
-      ],
-    },
-  };
+      },
+    ],
+    "/links": [
+      {
+        msg: "C1",
+        next: "/choice",
+      },
+      {
+        msg: "C2",
+        next: "/choice",
+      },
+    ],
+  },
+};
 
+test("Basic", async () => {
   await doubleC(async (C) => {
-    const chatbot = new C(data);
+    const chatbot = new C(basicFlowData);
     const outputs: Message[] = [];
     chatbot.on("output", (msg) => outputs.push(msg));
 
@@ -156,5 +156,20 @@ test("Chatbot functions", async () => {
       brand: "Ford",
       age: 8,
     });
+  });
+});
+
+it("can pause while waiting for input", async () => {
+  await doubleC(async (C) => {
+    const chatbot = new C(basicFlowData);
+    const outputs: Message[] = [];
+    chatbot.on("output", (msg) => outputs.push(msg));
+
+    await chatbot.start();
+    await chatbot.pause();
+    await chatbot.start();
+    await chatbot.inputAsync("1");
+
+    expect(outputs).toStrictEqual(["A", "B", "C", "C", "C1", "C"]);
   });
 });

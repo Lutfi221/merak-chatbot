@@ -47,6 +47,10 @@ export class Link {
 
 export type Events = {
   input: (message: Message) => void;
+  /**
+   * When the chatbot aborts waiting for an input.
+   */
+  "input-abort": () => void;
   output: (message: Message) => void;
   "status-change": (status: Status) => void;
   "status-change-waiting-input": () => void;
