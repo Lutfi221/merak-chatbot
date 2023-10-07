@@ -1,5 +1,11 @@
 {
-  "entryPoints": ["src/types.ts", "src/chatbot/index.ts"],
-  "plugin": ["@mxssfd/typedoc-theme"],
+  "entryPoints": [
+    "src/types.ts",
+    "src/chatbot/index.ts",
+    "src/debug.ts"
+  ],
+  "plugin": [
+    "@mxssfd/typedoc-theme"
+  ],
   "theme": "my-theme"
 }

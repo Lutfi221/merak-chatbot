@@ -1,6 +1,6 @@
 import { FlowData } from "../types";
 import Chatbot from "./Chatbot";
-import ChatbotDebugger from "./ChatbotDebugger";
+import ChatbotDebugger from "./debug/ChatbotDebugger";
 import { Message } from "./types";
 
 /**

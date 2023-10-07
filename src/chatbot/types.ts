@@ -1,3 +1,4 @@
+import { ChatbotStatePatch } from "../debug";
 import { LinkString, Step } from "../types";
 import Head from "./Head";
 import Storage from "./Storage";
@@ -55,7 +56,13 @@ export type Events = {
   "status-change": (status: Status) => void;
   "status-change-waiting-input": () => void;
   "page-complete": (storage: Storage) => void;
-  "step-complete": (step: Step) => void;
+  /**
+   * When the chatbot completes a step.
+   * @param step The completed step.
+   * @param statePatch The patch representing the changes to the chatbot state.
+   *                   This is only available when the chatbot is in debug mode.
+   */
+  "step-complete": (step: Step, statePatch?: ChatbotStatePatch) => void;
   error: (error: Error) => void;
   idle: (prevHead: Head, step: Step) => void;
   exit: () => void;
