@@ -74,11 +74,12 @@ export const handleInput: StepHandler = async (handle, next) => {
             "Invalid input. \n" +
               "The input doesn't match the required pattern.",
         );
-      } else {
-        handle.acceptInput();
-        handle.storage.setValue(input.var, userInput);
+        next();
+        return;
       }
     }
+    handle.acceptInput();
+    handle.storage.setValue(input.var, userInput);
 
     next();
     return;
