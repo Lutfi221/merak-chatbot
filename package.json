@@ -6,8 +6,6 @@
     "type": "git",
     "url": "https://github.com/Lutfi221/merak-chatbot.git"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watchAll",
@@ -51,5 +49,23 @@
   "dependencies": {
     "immer": "^10.0.2",
     "node-fetch": "^2.7.0"
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./chatbot": {
+      "default": "./dist/chatbot/index.js",
+      "types": "./dist/chatbot/index.d.ts"
+    },
+    "./types": {
+      "default": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    },
+    "./debug": {
+      "default": "./dist/debug.js",
+      "types": "./dist/debug.d.ts"
+    }
   }
 }
