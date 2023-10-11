@@ -13,7 +13,10 @@ export const handleMessage: StepHandler = async (handle, next) => {
 
 export const handleNext: StepHandler = async (handle, next) => {
   const step = handle.step;
-  if (step?.next) handle.nextLink = Link.fromLinkString(step.next);
+  if (step?.next)
+    handle.nextLink = Link.fromLinkString(
+      handle.storage.expandString(step.next),
+    );
 
   next();
 };
