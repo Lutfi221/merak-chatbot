@@ -163,12 +163,12 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
    * Create a `Handle` object.
    */
   protected createHandle(head = this.head, storage = this.storage) {
-    return new Handle(
-      head.step,
-      head.nextLink,
+    return new Handle({
+      step: head.step,
+      nextLink: head.nextLink,
       storage,
-      this.functions,
-      () =>
+      functions: this.functions,
+      promptInput: () =>
         new Promise((res, rej) => {
           const handleInput = (msg: Message) => {
             cleanup();
@@ -187,8 +187,8 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
           this.once("input-abort", handleInputAbort);
           this.status = Status.WaitingInput;
         }),
-      (msg) => this.emit("output", msg),
-    );
+      print: (msg) => this.emit("output", msg),
+    });
   }
 
   /**

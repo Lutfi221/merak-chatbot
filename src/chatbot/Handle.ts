@@ -11,6 +11,15 @@ export enum HandleInputStatus {
   Rejected,
 }
 
+export type HandleOptions = {
+  step?: Step | null;
+  nextLink?: Link | null;
+  storage?: Storage;
+  functions?: ChatbotFunctionDictionary;
+  promptInput?: GetInput;
+  print?: Print;
+};
+
 /**
  * Object that is passed and processed through step handlers.
  */
@@ -25,14 +34,15 @@ export default class Handle {
   private inputRejectionMsg_: Message | undefined;
   storage: Storage;
 
-  constructor(
-    step: Step | null = null,
-    nextLink: Link | null = null,
-    storage = new Storage(),
-    functions: ChatbotFunctionDictionary = {},
-    promptInput?: GetInput,
-    print?: Print,
-  ) {
+  constructor(options?: HandleOptions) {
+    const {
+      step = null,
+      nextLink = null,
+      storage = new Storage(),
+      functions = {},
+      promptInput,
+      print,
+    } = options || {};
     this.step = step;
     this.nextLink = nextLink;
     this.storage = storage;

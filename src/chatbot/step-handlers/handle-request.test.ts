@@ -24,10 +24,12 @@ it("should send a GET request and parse the response", async () => {
 
   const url = "https://socials.com/user?id=123";
   const handle = new Handle({
-    request: {
-      var: "user",
-      method: "GET",
-      url: url,
+    step: {
+      request: {
+        var: "user",
+        method: "GET",
+        url: url,
+      },
     },
   });
 
@@ -45,11 +47,13 @@ it("should send a POST request and parse the response", async () => {
   setFetchResponseTextMock(JSON.stringify(resObj));
 
   const handle = new Handle({
-    request: {
-      var: "postResponse",
-      method: "POST",
-      url: url,
-      body: body(),
+    step: {
+      request: {
+        var: "postResponse",
+        method: "POST",
+        url: url,
+        body: body(),
+      },
     },
   });
 
@@ -65,11 +69,13 @@ it("should expand placeholder variables", async () => {
   setFetchResponseTextMock("{}");
 
   const handle = new Handle({
-    request: {
-      var: "postResponse",
-      method: "POST",
-      url: urlTemplate(),
-      body: bodyTemplate(),
+    step: {
+      request: {
+        var: "postResponse",
+        method: "POST",
+        url: urlTemplate(),
+        body: bodyTemplate(),
+      },
     },
   });
   handle.storage.dictionary = { user: "lutfi", title: "Abc" };
