@@ -1,4 +1,5 @@
 import { Message } from "./chatbot/types";
+export { Message } from "./chatbot/types";
 
 /**
  * A string starting with a `/`, and optionally ending with an
