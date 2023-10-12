@@ -37,7 +37,9 @@ export const handleLinks: StepHandler = async (handle, next) => {
   if (step?.links) {
     const input = String(await handle.getInput());
     if (input in step.links)
-      handle.nextLink = Link.fromLinkString(step.links[input]);
+      handle.nextLink = Link.fromLinkString(
+        handle.storage.expandString(step.links[input]),
+      );
     else handle.rejectInput(`Input a valid link choice.`);
   }
 
