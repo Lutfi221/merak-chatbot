@@ -25,8 +25,8 @@ export type HandleOptions = {
  */
 export default class Handle {
   nextLink: Link | null = null;
+  step: Step | null;
 
-  readonly step: Step | null;
   readonly functions: ChatbotFunctionDictionary;
 
   private input: Message | undefined;

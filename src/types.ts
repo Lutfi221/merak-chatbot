@@ -47,10 +47,17 @@ export interface RequestProperty {
   expandBody?: boolean;
 }
 
+export interface SwitchProperty {
+  var: string;
+  cases: { [key: string]: Step };
+  default?: Step;
+}
+
 export type Step = BaseStep & {
   input?: InputProperty;
   execute?: FunctionProperty;
   request?: RequestProperty;
+  switch?: SwitchProperty;
 };
 
 export type FlowData = {

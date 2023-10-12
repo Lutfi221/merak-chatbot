@@ -3,6 +3,7 @@ import { Link } from "../types";
 
 import handleExecute from "./handle-execute";
 import handleRequest from "./handle-request";
+import handleSwitch from "./handle-switch";
 
 export const handleMessage: StepHandler = async (handle, next) => {
   const step = handle.step;
@@ -92,6 +93,7 @@ export const handleInput: StepHandler = async (handle, next) => {
 };
 
 export const DEFAULT_STEP_HANDLERS: StepHandler[] = [
+  handleSwitch,
   handleMessage,
   handleNext,
   handleInput,
