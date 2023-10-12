@@ -5,7 +5,7 @@ import Handle, { HandleInputStatus, StepHandler } from "./Handle";
 import { DEFAULT_STEP_HANDLERS } from "./step-handlers";
 import Storage from "./Storage";
 import ChatbotEventEmitter from "./ChatbotEventEmitter";
-import { InputAbortionException } from "./errors";
+import { ChatbotError, InputAbortionException } from "./errors";
 
 export interface ChatbotBase extends ChatbotEventEmitter {
   storage: Storage;
@@ -137,7 +137,17 @@ class Chatbot extends ChatbotEventEmitter implements ChatbotBase {
       } catch (e) {
         if (e instanceof InputAbortionException) {
           // do nothing
-        } else throw e;
+        }
+        if (e instanceof ChatbotError) {
+          this.emit("error", e);
+        } else {
+          this.emit(
+            "error",
+            ChatbotError.fromError(this.head.link!, e as Error),
+          );
+        }
+
+        this.pause();
       }
     }
 

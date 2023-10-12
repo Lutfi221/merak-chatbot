@@ -1,4 +1,5 @@
 import { FlowData, Step } from "../types";
+import { ChatbotError } from "./errors";
 import { Link } from "./types";
 
 export default class Head {
@@ -12,12 +13,20 @@ export default class Head {
   }
 
   navigate(target: Link | null) {
+    try {
+      this.getStep(target);
+    } catch (e) {
+      throw new ChatbotError(
+        this.link!,
+        `Cannot navigate to '${target?.toLinkString()}'`,
+      );
+    }
+
     this.link = target;
   }
 
   get step(): Step | null {
-    if (this.link == null) return null;
-    return this._data.pages[this.link.pageLink][this.link.index];
+    return this.getStep(this.link);
   }
 
   get nextLink(): Link | null {
@@ -25,5 +34,10 @@ export default class Head {
     if (this.link.index >= this._data.pages[this.link.pageLink].length - 1)
       return null;
     return new Link(this.link.pageLink, this.link.index + 1);
+  }
+
+  private getStep(link: Link | null): Step | null {
+    if (link == null) return null;
+    return this._data.pages[link.pageLink][link.index];
   }
 }
