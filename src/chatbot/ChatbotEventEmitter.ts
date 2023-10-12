@@ -1,4 +1,4 @@
-import EventEmitter from "events";
+import EventEmitter from "eventemitter3";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { Events } from "./types";
 

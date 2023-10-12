@@ -47,6 +47,7 @@
     "/dist/**/*.ts"
   ],
   "dependencies": {
+    "eventemitter3": "^5.0.1",
     "immer": "^10.0.2",
     "node-fetch": "^2.7.0"
   },
