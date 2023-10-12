@@ -14,6 +14,7 @@ export const handleMessage: StepHandler = async (handle, next) => {
       msg = step.msg.join("");
     else msg = step.msg as string;
 
+    msg = handle.storage.expandString(msg);
     handle.print(msg);
   }
 
