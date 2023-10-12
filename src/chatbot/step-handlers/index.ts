@@ -7,7 +7,15 @@ import handleSwitch from "./handle-switch";
 
 export const handleMessage: StepHandler = async (handle, next) => {
   const step = handle.step;
-  if (step?.msg) handle.print(step.msg);
+  if (step?.msg) {
+    let msg: string;
+
+    if (Array.isArray(step.msg) && step.msg.every((s) => typeof s === "string"))
+      msg = step.msg.join("");
+    else msg = step.msg as string;
+
+    handle.print(msg);
+  }
 
   next();
 };
