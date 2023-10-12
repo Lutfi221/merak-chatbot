@@ -3,11 +3,7 @@ import { LinkString, Step } from "../types";
 import Head from "./Head";
 import Storage from "./Storage";
 
-export type Message =
-  | string
-  | {
-      toString: () => string;
-    };
+export type Message = string;
 
 export enum Status {
   Paused,
